@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>국민대학교 근처 자취방 리스트</title>
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a1120;
+    --panel: #121b2e;
+    --panel-2: #17233b;
+    --border: #223252;
+    --text: #e7ecf3;
+    --muted: #8fa0be;
+    --teal: #2dd4bf;
+    --gold: #e3b341;
+    --ziptoss: #60a5fa;
+    --gobang: #ff7a1a;
+    --daangn: #ff8a3d;
+    --dgdr: #a78bfa;
+    --site: #34d399;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(10, 17, 32, 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 28px 16px;
+  }
+  header h1 { margin: 0 0 2px; font-size: 22px; letter-spacing: -0.01em; }
+  header h1 span { color: var(--teal); }
+  header p.sub { margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+
+  .platform-tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .platform-tab {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 999px;
+    padding: 7px 14px; font-size: 12.5px; color: var(--muted); cursor: pointer; user-select: none;
+  }
+  .platform-tab .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .platform-tab.active { color: var(--text); border-color: currentColor; }
+  .platform-tab[data-pf="pf-ziptoss"].active { color: var(--ziptoss); }
+  .platform-tab[data-pf="pf-ziptoss"] .dot { background: var(--ziptoss); }
+  .platform-tab[data-pf="pf-gobang"].active { color: var(--gobang); }
+  .platform-tab[data-pf="pf-gobang"] .dot { background: var(--gobang); }
+  .platform-tab[data-pf="pf-daangn"].active { color: var(--daangn); }
+  .platform-tab[data-pf="pf-daangn"] .dot { background: var(--daangn); }
+  .platform-tab[data-pf="pf-dgdr"].active { color: var(--dgdr); }
+  .platform-tab[data-pf="pf-dgdr"] .dot { background: var(--dgdr); }
+  .platform-tab[data-pf="pf-site"].active { color: var(--site); }
+  .platform-tab[data-pf="pf-site"] .dot { background: var(--site); }
+  .platform-tab .count { color: var(--muted); font-size: 11px; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .controls input[type="text"], .controls select, .controls input[type="number"] {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit;
+  }
+  .controls input[type="text"] { flex: 1 1 220px; min-width: 160px; }
+  .controls input[type="number"] { width: 110px; }
+
+  .stats { display: flex; gap: 22px; padding: 14px 28px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat .label { font-size: 11px; color: var(--muted); }
+  .stat .value { font-size: 18px; font-weight: 600; }
+  .stat .value.teal { color: var(--teal); }
+  .stat .value.gold { color: var(--gold); }
+
+  main { padding: 20px 28px 60px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+
+  .card {
+    position: relative; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px 16px 14px; transition: border-color 0.15s, transform 0.15s;
+  }
+  .card:hover { border-color: var(--teal); transform: translateY(-2px); }
+
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 11px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
+  .tag.warn { color: var(--gold); border-color: rgba(227,179,65,0.4); background: rgba(227,179,65,0.06); }
+  .tag.pf-ziptoss { color: var(--ziptoss); border-color: rgba(96,165,250,0.4); background: rgba(96,165,250,0.08); }
+  .tag.pf-gobang { color: var(--gobang); border-color: rgba(255,122,26,0.4); background: rgba(255,122,26,0.08); }
+  .tag.pf-daangn { color: var(--daangn); border-color: rgba(255,138,61,0.4); background: rgba(255,138,61,0.08); }
+  .tag.pf-dgdr { color: var(--dgdr); border-color: rgba(167,139,250,0.4); background: rgba(167,139,250,0.08); }
+  .tag.pf-site { color: var(--site); border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.08); }
+
+  .distpill {
+    flex-shrink: 0; text-align: right; background: rgba(45,212,191,0.08);
+    border: 1px solid rgba(45,212,191,0.35); border-radius: 8px; padding: 4px 8px;
+  }
+  .distpill .n { color: var(--teal); font-weight: 700; font-size: 13px; }
+  .distpill .l { color: var(--muted); font-size: 9px; letter-spacing: 0.02em; }
+
+  .building { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
+  .address { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; line-height: 1.4; }
+  .address .approx { color: var(--gold); font-size: 11px; }
+
+  .price-row { display: flex; gap: 18px; margin-bottom: 10px; flex-wrap: wrap; }
+  .price-row .item .l { font-size: 10.5px; color: var(--muted); margin-bottom: 1px; }
+  .price-row .item .n { font-size: 17px; font-weight: 600; }
+
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted);
+    border-top: 1px dashed var(--border); padding-top: 10px; margin-bottom: 10px;
+  }
+  .meta b { color: var(--text); font-weight: 500; }
+
+  .notes {
+    font-size: 12px; color: var(--muted); line-height: 1.5; margin: 0 0 12px;
+    background: var(--panel-2); border-radius: 8px; padding: 9px 11px;
+  }
+
+  .action-btn {
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    font-size: 12.5px; font-weight: 600; color: #06251f; text-decoration: none;
+    background: var(--teal); border-radius: 8px; padding: 10px; text-align: center;
+  }
+  .action-btn:hover { filter: brightness(1.08); }
+  .action-btn.disabled {
+    background: var(--panel-2); color: var(--muted); border: 1px solid var(--border);
+    pointer-events: none;
+  }
+
+  .empty { text-align: center; color: var(--muted); padding: 80px 20px; }
+  .empty button {
+    margin-top: 12px; background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 16px; cursor: pointer; font-family: inherit;
+  }
+
+  .footnote { max-width: 900px; margin: 30px auto 0; padding: 14px 16px; color: var(--muted);
+    font-size: 12px; line-height: 1.6; border-top: 1px dashed var(--border); }
+
+  @media (max-width: 520px) {
+    header, .stats, main { padding-left: 16px; padding-right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏠 <span>국민대학교</span> 근처 자취방 리스트</h1>
+  <p class="sub">집토스·고방·당근부동산·동거동락 등에서 직접 확인한 매물 모음 · 클릭하면 원본 매물로 바로 이동</p>
+  <div class="platform-tabs" id="platformTabs"></div>
+  <div class="controls">
+    <input type="text" id="q" placeholder="이름, 동네로 검색">
+    <select id="typeFilter"></select>
+    <input type="number" id="maxRent" placeholder="최대 월세(만원)">
+    <select id="maxDistance">
+      <option value="">거리 상관없음</option>
+      <option value="0.5">0.5km 이내</option>
+      <option value="1">1km 이내</option>
+      <option value="2">2km 이내</option>
+      <option value="3">3km 이내</option>
+    </select>
+    <select id="sort">
+      <option value="distance">학교와 가까운 순</option>
+      <option value="rentMin">월세 낮은 순</option>
+    </select>
+  </div>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<main>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">
+    조건에 맞는 매물이 없어요. 검색어나 필터를 조정해보세요.
+    <br><button id="resetBtn">필터 초기화</button>
+  </div>
+  <p class="footnote">
+    ※ 거리 값 중 일부("정성적 표현", "도보시간 환산", "동일 동 시설 기준 추정")는 정확한 실측이 아니라
+    출처 페이지의 설명이나 인근 시설을 근거로 한 추정치입니다. 카드에 표시된 거리 산출방식을 참고하세요.
+    보증금·월세·옵션 등은 수집 시점 기준이며 실제 계약 전 반드시 출처 링크에서 최신 정보를 다시 확인하세요.
+  </p>
+</main>
+
+<script>
+const DATA = [{"name": "집토스 매물 A (정릉동, 오픈형 원룸)", "type": "원룸(오픈형)", "distanceKm": 0.1, "distanceMethod": "정성적 표현(코앞)", "rentMin": 65.0, "rentMax": 65.0, "rentRaw": "65(보1000)", "deposit": "1000", "maintenance": "10(정액)", "privateBathroom": "정보없음(집토스 목록엔 옵션만 표시)", "ac": "정보없음(풀옵션 표기)", "address": "서울특별시 성북구 정릉동 (정확한 지번은 링크에서 확인)", "platform": "집토스(ziptoss.com)", "platformShort": "집토스", "platformClass": "pf-ziptoss", "notes": "국민대 코앞(정릉동, 국민대 지도 검색 결과). 대로변, 주차 가능, 반려동물 가능, 풀옵션, 16.98㎡·지상3층.", "sourceUrl": "https://ziptoss.com/?zoom=17&lat=37.60871&lng=127.004609&propertyKey=19f215902e03"}, {"name": "집토스 매물 B (정릉동, 오픈형 원룸)", "type": "원룸(오픈형)", "distanceKm": 0.1, "distanceMethod": "정성적 표현(코앞)", "rentMin": 45.0, "rentMax": 45.0, "rentRaw": "45(보500)", "deposit": "500", "maintenance": "없음", "privateBathroom": "정보없음(집토스 목록엔 옵션만 표시)", "ac": "정보없음(풀옵션 표기)", "address": "서울특별시 성북구 정릉동 (정확한 지번은 링크에서 확인)", "platform": "집토스(ziptoss.com)", "platformShort": "집토스", "platformClass": "pf-ziptoss", "notes": "국민대 코앞(정릉동, 국민대 지도 검색 결과). 반지층, 주차·승강기 가능, 풀옵션, 19.8㎡.", "sourceUrl": "https://ziptoss.com/?zoom=17&lat=37.60791&lng=127.000214&propertyKey=19fe86c66757"}, {"name": "집토스 매물 C (정릉동, 투룸)", "type": "투룸", "distanceKm": 0.1, "distanceMethod": "정성적 표현(코앞)", "rentMin": 55.0, "rentMax": 55.0, "rentRaw": "55(보500)", "deposit": "500", "maintenance": "3(정액)", "privateBathroom": "정보없음(집토스 목록엔 옵션만 표시)", "ac": "정보없음(풀옵션 표기)", "address": "서울특별시 성북구 정릉동 (정확한 지번은 링크에서 확인)", "platform": "집토스(ziptoss.com)", "platformShort": "집토스", "platformClass": "pf-ziptoss", "notes": "국민대 코앞(정릉동, 국민대 지도 검색 결과). 지상1층, 풀옵션, 16.5㎡. 원룸이 아닌 투룸이라 룸메이트와 함께 지내려는 경우 참고.", "sourceUrl": "https://ziptoss.com/?zoom=17&lat=37.606151&lng=127.001831&propertyKey=1a03fba8863b"}, {"name": "집토스 매물 D (정릉동, 초근접)", "type": "원룸(오픈형)", "distanceKm": 0.15, "distanceMethod": "명시", "rentMin": 70.0, "rentMax": 70.0, "rentRaw": "70(보1000)", "deposit": "1000", "maintenance": "5(정액)", "privateBathroom": "정보없음(집토스 목록엔 옵션만 표시)", "ac": "정보없음(대로변·주차·승강기·풀옵션 표기)", "address": "서울특별시 성북구 정릉동 (정확한 지번은 링크에서 확인)", "platform": "집토스(ziptoss.com)", "platformShort": "집토스", "platformClass": "pf-ziptoss", "notes": "좌표상 국민대 캠퍼스와 거의 붙어있는 위치(약 0.1~0.2km). 23.1㎡, 지상2층.", "sourceUrl": "https://ziptoss.com/?zoom=17&lat=37.609664&lng=127.015096&propertyKey=19f0685d4663"}, {"name": "토브하우스 국민대점", "type": "쉐어하우스", "distanceKm": 0.22, "distanceMethod": "도보시간 환산", "rentMin": 48.0, "rentMax": 55.0, "rentRaw": "48~55", "deposit": "100", "maintenance": "3", "privateBathroom": "공용(좌변기·샤워기 각 2개)", "ac": "O(개인)", "address": "서울 성북구 정릉동 880-1", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "국민대 도보 약 3분. 여성전용, 6개월 이상 계약, 20세 이상, 외국어(영어) 응대, 2024년 리모델링.", "sourceUrl": "https://gobang.kr/place/13219"}, {"name": "하늘애하우스(국민대점)", "type": "원룸텔", "distanceKm": 0.53, "distanceMethod": "도보시간 환산", "rentMin": 24.0, "rentMax": 40.0, "rentRaw": "24~40", "deposit": "없음", "maintenance": "없음", "privateBathroom": "일부(3층 원룸형만 개인화장실, 2층은 공용)", "ac": "O(개인)", "address": "서울 성북구 정릉동 897-20", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "국민대 도보 약 7분. 외국어(영어) 응대 가능, 주차 가능. 미니룸/원룸형 혼합.", "sourceUrl": "https://gobang.kr/place/9211"}, {"name": "벙커쉐어하우스", "type": "쉐어하우스", "distanceKm": 0.6, "distanceMethod": "동일 정릉동 시설 기준 추정", "rentMin": 30.0, "rentMax": 40.0, "rentRaw": "30~40", "deposit": "30", "maintenance": "6", "privateBathroom": "공용(공용화장실 1개)", "ac": "O(개인)", "address": "서울 성북구 정릉동 226-41", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "북한산보국문역 도보 6분(국민대·서경대 인근). 여성전용, 19~50세, 1개월부터 이용 가능.", "sourceUrl": "https://gobang.kr/place/7120"}, {"name": "코코하우스", "type": "게스트하우스/원룸텔", "distanceKm": 0.6, "distanceMethod": "동일 정릉동 시설 기준 추정", "rentMin": 35.0, "rentMax": 70.0, "rentRaw": "35~70", "deposit": "10", "maintenance": "없음", "privateBathroom": "일부(1인실 위주, 공용화장실 5개·좌변기10·샤워기10 — 룸별 상이)", "ac": "O(개인)", "address": "서울 성북구 정릉동 670-7", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "북한산보국문역 도보 7분(국민대·서경대 인근). 남녀분리, 지하~4층, 엘리베이터 있음, 외국어(영어) 응대, 식사 제공, 주소이전 가능(전입신고 가능해 유학생에게 유용).", "sourceUrl": "https://gobang.kr/place/11230"}, {"name": "집토스 매물 E (정릉동)", "type": "원룸(오픈형)", "distanceKm": 0.75, "distanceMethod": "명시", "rentMin": 55.0, "rentMax": 55.0, "rentRaw": "55(보1000)", "deposit": "1000", "maintenance": "없음", "privateBathroom": "정보없음", "ac": "정보없음(풀옵션 표기)", "address": "서울특별시 성북구 정릉동 (정확한 지번은 링크에서 확인)", "platform": "집토스(ziptoss.com)", "platformShort": "집토스", "platformClass": "pf-ziptoss", "notes": "국민대에서 약 0.5~1km(정릉동). 19.8㎡, 지상1층.", "sourceUrl": "https://ziptoss.com/?zoom=17&lat=37.607911&lng=127.009541&propertyKey=229221697b69"}, {"name": "집토스 매물 F (정릉동)", "type": "원룸(오픈형)", "distanceKm": 0.9, "distanceMethod": "명시", "rentMin": 61.0, "rentMax": 61.0, "rentRaw": "61(보1000)", "deposit": "1000", "maintenance": "9(정액)", "privateBathroom": "정보없음", "ac": "정보없음(주차·승강기·풀옵션 표기)", "address": "서울특별시 성북구 정릉동 (정확한 지번은 링크에서 확인)", "platform": "집토스(ziptoss.com)", "platformShort": "집토스", "platformClass": "pf-ziptoss", "notes": "국민대에서 약 0.8~1km(정릉동, 정릉역 방향). 19.8㎡, 지상3층.", "sourceUrl": "https://ziptoss.com/?zoom=17&lat=37.60942&lng=127.006793&propertyKey=19ffc6afe6f3"}, {"name": "명지고시원", "type": "고시원", "distanceKm": 1.12, "distanceMethod": "도보시간 환산", "rentMin": 28.0, "rentMax": 36.0, "rentRaw": "28~36", "deposit": "없음", "maintenance": "없음", "privateBathroom": "일부(원룸형 2개만 개인화장실, 미니룸 10개는 공용)", "ac": "O(개인)", "address": "서울 성북구 정릉동 266-135", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "북한산보국문역 도보 5분, 국민대 약 15분 거리(서경대 3분). 외국인 응대 표시, 성별무관, 기간 제한 없음.", "sourceUrl": "https://gobang.kr/place/24324"}, {"name": "집토스 매물 G (돈암동, 투룸)", "type": "투룸", "distanceKm": 1.3, "distanceMethod": "명시", "rentMin": 85.0, "rentMax": 85.0, "rentRaw": "85(보1600)", "deposit": "1600", "maintenance": "없음", "privateBathroom": "정보없음", "ac": "정보없음(대로변·주차 표기)", "address": "서울특별시 성북구 돈암동 (정확한 지번은 링크에서 확인)", "platform": "집토스(ziptoss.com)", "platformShort": "집토스", "platformClass": "pf-ziptoss", "notes": "국민대에서 약 1.3km(돈암동). 46.2㎡, 지상4층. 원룸이 아닌 투룸.", "sourceUrl": "https://ziptoss.com/?zoom=17&lat=37.598381&lng=127.020866&propertyKey=17c3f80c8767"}, {"name": "집토스 매물 H (종암동)", "type": "원룸(오픈형)", "distanceKm": 1.35, "distanceMethod": "명시", "rentMin": 60.0, "rentMax": 60.0, "rentRaw": "60(보200)", "deposit": "200", "maintenance": "없음", "privateBathroom": "정보없음", "ac": "정보없음(승강기·풀옵션 표기)", "address": "서울특별시 성북구 종암동 (정확한 지번은 링크에서 확인)", "platform": "집토스(ziptoss.com)", "platformShort": "집토스", "platformClass": "pf-ziptoss", "notes": "국민대에서 약 1.2~1.5km(종암동). 16㎡, 지상1층.", "sourceUrl": "https://ziptoss.com/?zoom=17&lat=37.59629&lng=127.033155&propertyKey=229146d6ab61"}, {"name": "집토스 매물 I (종암동)", "type": "원룸(오픈형)", "distanceKm": 2.0, "distanceMethod": "명시", "rentMin": 65.0, "rentMax": 65.0, "rentRaw": "65(보500)", "deposit": "500", "maintenance": "없음", "privateBathroom": "정보없음", "ac": "정보없음(승강기·풀옵션 표기)", "address": "서울특별시 성북구 종암동 (정확한 지번은 링크에서 확인)", "platform": "집토스(ziptoss.com)", "platformShort": "집토스", "platformClass": "pf-ziptoss", "notes": "국민대에서 약 2km(종암동). 19.8㎡, 지상3층.", "sourceUrl": "https://ziptoss.com/?zoom=17&lat=37.597547&lng=127.03997&propertyKey=17a858340023"}, {"name": "집토스 매물 J (하월곡동)", "type": "원룸(분리형)", "distanceKm": 2.0, "distanceMethod": "명시", "rentMin": 33.0, "rentMax": 33.0, "rentRaw": "33(보300)", "deposit": "300", "maintenance": "7(정액)", "privateBathroom": "정보없음", "ac": "정보없음(주차·풀옵션 표기)", "address": "서울특별시 성북구 하월곡동 (정확한 지번은 링크에서 확인)", "platform": "집토스(ziptoss.com)", "platformShort": "집토스", "platformClass": "pf-ziptoss", "notes": "국민대에서 약 2km(하월곡동). 16.5㎡, 반지층.", "sourceUrl": "https://ziptoss.com/?zoom=17&lat=37.604709&lng=127.038646&propertyKey=19943666df3b"}, {"name": "메가스테이 성신여대", "type": "원룸텔", "distanceKm": 3.0, "distanceMethod": "명시", "rentMin": 70.0, "rentMax": 80.0, "rentRaw": "70~80", "deposit": "20", "maintenance": "없음", "privateBathroom": "O(전실 개인화장실)", "ac": "O(개인)", "address": "서울 성북구 동선동1가 3-5", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "국민대에서 약 3km(성신여대입구역 도보 1분, 초역세권). 여성전용, 20~39세, 개인세탁기·주소이전 가능, 일본어 응대. 성신여대·고려대·한성대 인근.", "sourceUrl": "https://gobang.kr/place/10891"}, {"name": "밸류플레이스 성신여대점", "type": "원룸텔(고시원)", "distanceKm": 3.0, "distanceMethod": "명시", "rentMin": 57.0, "rentMax": 75.0, "rentRaw": "57~75", "deposit": "20", "maintenance": "없음", "privateBathroom": "O(전실 개인화장실)", "ac": "O(개인)", "address": "서울 성북구 동선동3가 195", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "국민대에서 약 3km(성신여대입구역 도보 4분). 성별무관, 39세 이하, 개인세탁기·주소이전 가능, 식사 제공. 2023년 오픈.", "sourceUrl": "https://gobang.kr/place/8771"}, {"name": "아띠 성신여대", "type": "쉐어하우스", "distanceKm": 3.0, "distanceMethod": "명시", "rentMin": 34.0, "rentMax": 52.0, "rentRaw": "34~52", "deposit": "200", "maintenance": "1~10", "privateBathroom": "공용(공용화장실 1개)", "ac": "O(개인)", "address": "서울 성북구 동선동4가 182", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "국민대에서 약 3km(성신여대입구역 도보 3분). 여성전용, 20~35세, 6개월 이상 계약, 1년 계약 시 매월 5만원 할인. 총 19개 방(1인실11·2인실6·3인실2).", "sourceUrl": "https://gobang.kr/place/6118"}, {"name": "성신여대 S-Stay 원룸텔", "type": "원룸텔", "distanceKm": 3.0, "distanceMethod": "명시", "rentMin": null, "rentMax": null, "rentRaw": "문의 필요", "deposit": "문의 필요", "maintenance": "정보없음", "privateBathroom": "O(원룸 타입 기준, 미니룸은 별도 확인 필요)", "ac": "정보없음", "address": "서울 성북구 보문로30라길 9(구.동선동2가 65)", "platform": "자체 홈페이지(sstay.ainhouse.kr)", "platformShort": "홈페이지", "platformClass": "pf-site", "notes": "국민대에서 약 3km(성북구 동선동2가, 성신여대입구역 도보 5분·성신여대 정문 4분). 원룸/미니룸 보유, 엘리베이터·건조기 있음. 로봇 접근 차단 페이지가 아니라 검색 스니펫 기반 정보라 정확한 가격은 전화문의(02-953-3953) 필요.", "sourceUrl": "http://sstay.ainhouse.kr/"}, {"name": "동선동2가 직거래 원룸(당근)", "type": "원룸(분리형)", "distanceKm": 3.0, "distanceMethod": "명시", "rentMin": 120.0, "rentMax": 120.0, "rentRaw": "120", "deposit": "100", "maintenance": "5(수도·인터넷 포함)", "privateBathroom": "정보없음(매물설명에 화장실 언급 없음, 방1개)", "ac": "O", "address": "서울특별시 성북구 보문로30나길 37-1 (동선동2가)", "platform": "당근부동산(realty.daangn.com)", "platformShort": "당근부동산", "platformClass": "pf-daangn", "notes": "국민대에서 약 3km(성신여대 정문 앞, 성신여대입구역 도보 9분). 단기 전용, 즉시입주 가능, 침대·세탁기·인덕션 등 풀옵션, 주차 불가.", "sourceUrl": "https://realty.daangn.com/articles/2020075"}, {"name": "싱글하우스 성신여대점", "type": "고시원", "distanceKm": 3.5, "distanceMethod": "명시", "rentMin": 45.0, "rentMax": 65.0, "rentRaw": "45~65", "deposit": "10", "maintenance": "없음", "privateBathroom": "O(전실 개인화장실)", "ac": "정보없음", "address": "서울 성북구 삼선동4가 343", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "국민대에서 약 3.5km(성신여대입구역 도보 4~5분). 남녀분리, 20~40세, 1주부터 계약 가능, 외국인 응대 표시, 주소이전 가능.", "sourceUrl": "https://gobang.kr/place/3074"}, {"name": "코코쉐어하우스(고대점)", "type": "쉐어하우스", "distanceKm": 3.5, "distanceMethod": "명시", "rentMin": 28.0, "rentMax": 35.0, "rentRaw": "28~35", "deposit": "50", "maintenance": "5", "privateBathroom": "정보 상이(배지엔 개인화장실 표시, 공용시설 항목엔 공용화장실 1개만 안내 — 계약 전 확인 필요)", "ac": "O(개인)", "address": "서울 성북구 안암동5가 104-21", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "국민대에서 약 3~4km(성북구 안암동5가, 안암역 도보 4분·고려대 도보 1분). 남성전용, 20~30세, 6개월 이상 계약, 외국인 응대, 방 3개(2인실2·4인실1).", "sourceUrl": "https://gobang.kr/place/5561"}, {"name": "스테이업 수유", "type": "원룸텔", "distanceKm": 4.5, "distanceMethod": "명시", "rentMin": 45.0, "rentMax": 60.0, "rentRaw": "45~60", "deposit": "10", "maintenance": "없음", "privateBathroom": "일부(원룸형만 개인화장실, 미니룸·샤워룸은 공용화장실 이용)", "ac": "O(개인)", "address": "서울 강북구 수유동 47-39", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "국민대에서 약 4~5km(강북구 수유동, 화계역 도보 4분). 성별무관, 19~65세, 2주부터 계약 가능, 외국어(영어) 응대, 웰컴박스 제공. 방 종류 혼합(미니룸/샤워룸/원룸형).", "sourceUrl": "https://gobang.kr/place/16548"}, {"name": "더스테이 수유역점", "type": "원룸텔", "distanceKm": 4.5, "distanceMethod": "명시", "rentMin": 50.0, "rentMax": 62.0, "rentRaw": "50~62", "deposit": "15", "maintenance": "없음", "privateBathroom": "O(전실 개인화장실, 원룸형 30실)", "ac": "O(개인)", "address": "서울 강북구 수유동 2-39", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "국민대에서 약 4~5km(강북구 수유동, 수유역 도보 4분). 성별무관, 20~60세, 1개월부터 계약 가능, 개인세탁기·주소이전 가능, 외국인 응대, 주차 가능.", "sourceUrl": "https://gobang.kr/place/11150"}, {"name": "드림 고시텔", "type": "원룸텔(고시원)", "distanceKm": 4.5, "distanceMethod": "명시", "rentMin": 40.0, "rentMax": 50.0, "rentRaw": "40~50", "deposit": "30", "maintenance": "없음", "privateBathroom": "O(전실 개인화장실)", "ac": "O(개인)", "address": "서울 강북구 미아동 197-17", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "국민대에서 약 4~5km(강북구 미아동, 4호선 미아역 도보 1분). 성별무관, 20~59세, 기간 제한 없음, 엘리베이터 있음, 외국인 응대.", "sourceUrl": "https://gobang.kr/place/15218"}, {"name": "밸류플레이스 고려대점", "type": "원룸텔(고시원)", "distanceKm": 4.5, "distanceMethod": "명시", "rentMin": 60.0, "rentMax": 75.0, "rentRaw": "60~75", "deposit": "20", "maintenance": "없음", "privateBathroom": "O(전실 개인화장실)", "ac": "O(개인)", "address": "서울 동대문구 제기동 137-66", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "국민대에서 약 4~5km(동대문구 제기동, 고려대역 도보 4분). 남녀분리, 연령제한 없음, 2023년 오픈, 개인세탁기(드럼세탁·건조)·주소이전 가능, 공과금 포함, 외국어(영어) 응대.", "sourceUrl": "https://gobang.kr/place/9209"}, {"name": "오픈하우스 미아사거리역점", "type": "원룸텔(고시원)", "distanceKm": 4.5, "distanceMethod": "명시", "rentMin": 35.0, "rentMax": 48.0, "rentRaw": "35~48", "deposit": "없음", "maintenance": "없음", "privateBathroom": "O(전실 개인화장실)", "ac": "O(개인)", "address": "서울 강북구 미아동 54-126", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "국민대에서 약 4~5km(강북구 미아동, 미아사거리역 도보 3분). 남녀분리, 20~60세, 1개월부터 계약 가능, 식사제공·주소이전 가능, 주차 가능.", "sourceUrl": "https://gobang.kr/place/8724"}, {"name": "릴리하우스 솔샘역점", "type": "쉐어하우스(아파트)", "distanceKm": 4.5, "distanceMethod": "동일 미아동 시설 기준 추정", "rentMin": 50.0, "rentMax": 50.0, "rentRaw": "50", "deposit": "100", "maintenance": "8", "privateBathroom": "공용(화장실 1개, 방 1개만 쉐어하는 구조)", "ac": "공용에어컨(개인 아님)", "address": "서울 강북구 미아동 1354", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "국민대 근접 지역으로 안내됨(강북구 미아동, 솔샘역 도보 4~5분). 여성전용, 20~39세, 6개월 이상 계약, 25평 아파트에서 방 1개 쉐어, 전기·수도·가스·공용물품비 관리비 포함.", "sourceUrl": "https://gobang.kr/place/6818"}, {"name": "픽셀하우스 미아점", "type": "고시원", "distanceKm": 4.5, "distanceMethod": "명시", "rentMin": 72.0, "rentMax": 75.0, "rentRaw": "72~75", "deposit": "30", "maintenance": "없음(공과금 포함 월세)", "privateBathroom": "O(전실 개인화장실)", "ac": "O(개인)", "address": "서울 강북구 미아동 189-5", "platform": "고방(gobang.kr)", "platformShort": "고방", "platformClass": "pf-gobang", "notes": "국민대에서 약 4~5km(강북구 미아동, 미아역 도보 8분·성신여대 3분 거리). 성별무관, 20~50세, 2024년 4월 오픈, 개인세탁기·주소이전 가능.", "sourceUrl": "https://gobang.kr/place/10942"}, {"name": "다정하우스(국민대, 정릉역)", "type": "쉐어하우스(빌라/다가구)", "distanceKm": null, "distanceMethod": "", "rentMin": null, "rentMax": null, "rentRaw": "문의 필요", "deposit": "문의 필요", "maintenance": "관리비 포함형(전기·가스 등 공과금+공용물품+월청소 포함)", "privateBathroom": "공용(화장실 1개, 4명 공동사용)", "ac": "정보없음", "address": "서울 성북구 정릉동", "platform": "동거동락(dgdr.co.kr)", "platformShort": "동거동락", "platformClass": "pf-dgdr", "notes": "우이신설선 정릉역 도보 3~4분, 정릉역에서 버스로 국민대 바로 이동. 방 3개(1인실2·2인실1) 총 4명 거주 빌라. 1년 이상 계약 시 매월 3만원 할인 + 방학기간(4개월) 대학생 특별할인 매월 10만원. 최소계약기간 6개월. 현재(크롤링 시점) 공실 없음 — 정확한 보증금/월세는 직거래 문의 필요.", "sourceUrl": "https://dgdr.co.kr/branch/147"}];
+const PLATFORM_ORDER = [...new Set(DATA.map(d => d.platform))];
+
+const els = {
+  q: document.getElementById('q'),
+  typeFilter: document.getElementById('typeFilter'),
+  maxRent: document.getElementById('maxRent'),
+  maxDistance: document.getElementById('maxDistance'),
+  sort: document.getElementById('sort'),
+  grid: document.getElementById('grid'),
+  empty: document.getElementById('empty'),
+  stats: document.getElementById('stats'),
+  resetBtn: document.getElementById('resetBtn'),
+  platformTabs: document.getElementById('platformTabs'),
+};
+
+let activePlatforms = new Set(PLATFORM_ORDER);
+
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function setupTypeOptions() {
+  const types = [...new Set(DATA.map(d => d.type).filter(Boolean))].sort();
+  els.typeFilter.innerHTML = '<option value="all">매물유형 전체</option>' +
+    types.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+}
+
+function setupPlatformTabs() {
+  const counts = {};
+  PLATFORM_ORDER.forEach(p => counts[p] = 0);
+  DATA.forEach(d => { counts[d.platform] = (counts[d.platform] || 0) + 1; });
+
+  els.platformTabs.innerHTML = PLATFORM_ORDER.map(p => {
+    const sample = DATA.find(d => d.platform === p);
+    return `
+      <div class="platform-tab active" data-pf="${sample.platformClass}" data-platform="${escapeHtml(p)}">
+        <span class="dot"></span>${escapeHtml(sample.platformShort)} <span class="count">${counts[p]}</span>
+      </div>`;
+  }).join('');
+
+  els.platformTabs.querySelectorAll('.platform-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const p = tab.dataset.platform;
+      if (activePlatforms.has(p)) {
+        if (activePlatforms.size === 1) return;
+        activePlatforms.delete(p);
+        tab.classList.remove('active');
+      } else {
+        activePlatforms.add(p);
+        tab.classList.add('active');
+      }
+      applyFilters();
+    });
+  });
+}
+
+function applyFilters() {
+  const q = els.q.value.trim().toLowerCase();
+  const type = els.typeFilter.value;
+  const maxRent = parseFloat(els.maxRent.value);
+  const maxDistance = parseFloat(els.maxDistance.value);
+
+  let list = DATA.filter(d => {
+    if (!activePlatforms.has(d.platform)) return false;
+    if (q && !((d.name || '').toLowerCase().includes(q) || (d.address || '').toLowerCase().includes(q))) return false;
+    if (type !== 'all' && d.type !== type) return false;
+    if (!isNaN(maxRent) && d.rentMin != null && d.rentMin > maxRent) return false;
+    if (!isNaN(maxDistance) && (d.distanceKm ?? Infinity) > maxDistance) return false;
+    return true;
+  });
+
+  const sort = els.sort.value;
+  const byNum = (key) => (a, b) => (a[key] ?? Infinity) - (b[key] ?? Infinity);
+  if (sort === 'distance') list.sort(byNum('distanceKm'));
+  else if (sort === 'rentMin') list.sort(byNum('rentMin'));
+
+  render(list);
+}
+
+function cardHtml(d) {
+  const dist = (d.distanceKm ?? null) !== null ? `${d.distanceKm}km` : '거리 미확인';
+  const isApprox = d.distanceMethod && d.distanceMethod !== '명시';
+  const rentText = (d.rentMin != null && d.rentMax != null)
+    ? (d.rentMin === d.rentMax ? `${d.rentMin}만원` : `${d.rentMin}~${d.rentMax}만원`)
+    : (d.rentRaw || '문의 필요');
+  const depositText = d.deposit && d.deposit !== 'nan' ? d.deposit : '정보없음';
+
+  return `
+    <div class="card">
+      <div class="card-top">
+        <div class="tags">
+          <span class="tag ${d.platformClass}">${escapeHtml(d.platformShort)}</span>
+          <span class="tag">${escapeHtml(d.type)}</span>
+          ${isApprox ? `<span class="tag warn">📍 ${escapeHtml(d.distanceMethod)}</span>` : ''}
+        </div>
+        <div class="distpill">
+          <div class="n mono">${dist}</div>
+          <div class="l">학교까지</div>
+        </div>
+      </div>
+      <p class="building">${escapeHtml(d.name)}</p>
+      <p class="address">${escapeHtml(d.address)}</p>
+      <div class="price-row">
+        <div class="item">
+          <div class="l">월세</div>
+          <div class="n mono">${escapeHtml(rentText)}</div>
+        </div>
+        <div class="item">
+          <div class="l">보증금</div>
+          <div class="n mono">${escapeHtml(depositText)}${/^[0-9]+$/.test(depositText) ? '<span style="font-size:11px;color:var(--muted)">만원</span>' : ''}</div>
+        </div>
+      </div>
+      <div class="meta">
+        <span>🚽 <b>${escapeHtml(d.privateBathroom)}</b></span>
+        <span>❄️ <b>${escapeHtml(d.ac)}</b></span>
+        <span>🧾 관리비 <b>${escapeHtml(d.maintenance)}</b></span>
+      </div>
+      ${d.notes ? `<p class="notes">${escapeHtml(d.notes)}</p>` : ''}
+      ${d.sourceUrl
+        ? `<a class="action-btn" href="${escapeHtml(d.sourceUrl)}" target="_blank" rel="noopener">매물 보러가기 →</a>`
+        : `<span class="action-btn disabled">전화 문의 필요</span>`}
+    </div>
+  `;
+}
+
+function render(list) {
+  els.empty.style.display = list.length ? 'none' : 'block';
+  els.grid.style.display = list.length ? 'grid' : 'none';
+  els.grid.innerHTML = list.map(cardHtml).join('');
+  renderStats(list);
+}
+
+function renderStats(list) {
+  if (!list.length) { els.stats.innerHTML = ''; return; }
+  const withRent = list.filter(d => d.rentMin != null);
+  const avgRent = withRent.length ? Math.round(withRent.reduce((s, d) => s + d.rentMin, 0) / withRent.length) : null;
+  const minRent = withRent.length ? Math.min(...withRent.map(d => d.rentMin)) : null;
+
+  els.stats.innerHTML = `
+    <div class="stat"><span class="label">매물 수</span><span class="value teal mono">${list.length}건</span></div>
+    <div class="stat"><span class="label">최저 월세</span><span class="value gold mono">${minRent ?? '-'}만원</span></div>
+    <div class="stat"><span class="label">평균 월세(최소가 기준)</span><span class="value mono">${avgRent ?? '-'}만원</span></div>
+  `;
+}
+
+els.resetBtn.addEventListener('click', () => {
+  els.q.value = ''; els.typeFilter.value = 'all'; els.maxRent.value = ''; els.maxDistance.value = ''; els.sort.value = 'distance';
+  activePlatforms = new Set(PLATFORM_ORDER);
+  els.platformTabs.querySelectorAll('.platform-tab').forEach(t => t.classList.add('active'));
+  applyFilters();
+});
+
+[els.q, els.typeFilter, els.maxRent, els.maxDistance, els.sort].forEach(el => {
+  el.addEventListener('input', applyFilters);
+});
+
+setupTypeOptions();
+setupPlatformTabs();
+applyFilters();
+</script>
+</body>
+</html>
