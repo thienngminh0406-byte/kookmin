@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>국민대학교 근처 자취방 리스트</title>
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a1120; --panel: #121b2e; --panel-2: #17233b; --border: #223252;
+    --text: #e7ecf3; --muted: #8fa0be; --teal: #2dd4bf; --gold: #e3b341;
+    --seongbuk: #60a5fa; --gangbuk: #fb923c;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  header { position: sticky; top: 0; z-index: 10; background: rgba(10,17,32,0.92);
+    backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); padding: 20px 28px 16px; }
+  header h1 { margin: 0 0 2px; font-size: 22px; letter-spacing: -0.01em; }
+  header h1 span { color: var(--teal); }
+  header p.sub { margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+
+  .region-tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .region-tab { display: flex; align-items: center; gap: 6px; background: var(--panel);
+    border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px;
+    font-size: 12.5px; color: var(--muted); cursor: pointer; user-select: none; }
+  .region-tab .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .region-tab.active { color: var(--text); border-color: currentColor; }
+  .region-tab[data-rg="성북구"].active { color: var(--seongbuk); }
+  .region-tab[data-rg="성북구"] .dot { background: var(--seongbuk); }
+  .region-tab[data-rg="강북구"].active { color: var(--gangbuk); }
+  .region-tab[data-rg="강북구"] .dot { background: var(--gangbuk); }
+  .region-tab .count { color: var(--muted); font-size: 11px; }
+
+  .lang-switch { display: inline-flex; gap: 4px; margin-bottom: 10px; }
+  .lang-btn {
+    font-family: inherit; font-size: 11.5px; padding: 5px 11px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--panel); color: var(--muted); cursor: pointer;
+  }
+  .lang-btn.active { background: var(--teal); color: #06251f; border-color: var(--teal); font-weight: 600; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .controls input[type="text"], .controls select, .controls input[type="number"] {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; }
+  .controls input[type="text"] { flex: 1 1 220px; min-width: 160px; }
+  .controls input[type="number"] { width: 110px; }
+
+  .quick-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .qchip { background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 999px; padding: 6px 12px; font-size: 12px; cursor: pointer; user-select: none;
+    display: inline-flex; align-items: center; gap: 4px; }
+  .qchip.active { color: var(--text); border-color: var(--teal); background: rgba(45,212,191,0.1); }
+  .qchip.fav.active { color: #ff6b81; border-color: #ff6b81; background: rgba(255,107,129,0.1); }
+  .qchip .sep { width: 1px; height: 12px; background: var(--border); margin: 0 2px; }
+
+  .stats { display: flex; gap: 22px; padding: 14px 28px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat .label { font-size: 11px; color: var(--muted); }
+  .stat .value { font-size: 18px; font-weight: 600; }
+  .stat .value.teal { color: var(--teal); }
+  .stat .value.gold { color: var(--gold); }
+
+  main { padding: 20px 28px 60px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+
+  .card { position: relative; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px 16px 14px; transition: border-color 0.15s, transform 0.15s; }
+  .card:hover { border-color: var(--teal); transform: translateY(-2px); }
+
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 11px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
+  .tag.rg-seongbuk { color: var(--seongbuk); border-color: rgba(96,165,250,0.4); background: rgba(96,165,250,0.08); }
+  .tag.rg-gangbuk { color: var(--gangbuk); border-color: rgba(251,146,60,0.4); background: rgba(251,146,60,0.08); }
+
+  .distpill { flex-shrink: 0; text-align: right; background: rgba(45,212,191,0.08);
+    border: 1px solid rgba(45,212,191,0.35); border-radius: 8px; padding: 4px 8px; }
+  .distpill .n { color: var(--teal); font-weight: 700; font-size: 13px; }
+  .distpill .l { color: var(--muted); font-size: 9px; letter-spacing: 0.02em; }
+
+  .building { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
+  .address { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; line-height: 1.4; }
+  .address .approx { color: var(--gold); }
+
+  .price-row { display: flex; gap: 18px; margin-bottom: 10px; flex-wrap: wrap; }
+  .price-row .item .l { font-size: 10.5px; color: var(--muted); margin-bottom: 1px; }
+  .price-row .item .n { font-size: 17px; font-weight: 600; }
+
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted);
+    border-top: 1px dashed var(--border); padding-top: 10px; margin-bottom: 10px; }
+  .meta b { color: var(--text); font-weight: 500; }
+
+  .subway-line { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+  .subway-line b { color: var(--text); }
+
+  .amenities { font-size: 11.5px; color: var(--teal); line-height: 1.6; margin: 0 0 10px; }
+  .amenity-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px 10px;
+    font-size: 11.5px; color: var(--teal); margin: 0 0 10px; }
+  .amenity-grid .am { line-height: 15px; white-space: normal; word-break: keep-all;
+    overflow-wrap: break-word; }
+  .amenity-grid .am.am-empty { color: #3d4a63; }
+
+  .fav-btn { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px;
+    border-radius: 50%; border: 1px solid var(--border); background: var(--panel-2);
+    color: var(--muted); font-size: 15px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; line-height: 1; }
+  .fav-btn.active { color: #ff6b81; border-color: #ff6b81; background: rgba(255,107,129,0.1); }
+  .card-top { padding-right: 34px; }
+
+  .notes { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 0 0 12px;
+    background: var(--panel-2); border-radius: 8px; padding: 9px 11px; }
+
+  .actions { display: flex; gap: 6px; }
+  .actions + .actions { margin-top: 6px; }
+  .action-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+    font-size: 11.5px; font-weight: 600; color: #06251f; text-decoration: none;
+    background: var(--teal); border-radius: 8px; padding: 9px 4px; text-align: center; white-space: nowrap; }
+  .action-btn:hover { filter: brightness(1.08); }
+  .action-btn.secondary { background: transparent; color: var(--muted); border: 1px solid var(--border); font-weight: 500; }
+  .action-btn.secondary:hover { background: var(--panel-2); }
+
+  .empty { text-align: center; color: var(--muted); padding: 80px 20px; }
+  .empty button { margin-top: 12px; background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 16px; cursor: pointer; font-family: inherit; }
+
+  .footnote { max-width: 900px; margin: 30px auto 0; padding: 14px 16px; color: var(--muted);
+    font-size: 12px; line-height: 1.6; border-top: 1px dashed var(--border); }
+
+  @media (max-width: 520px) { header, .stats, main { padding-left: 16px; padding-right: 16px; } }
+
+  .notice-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(5, 9, 18, 0.72);
+    backdrop-filter: blur(3px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .notice-overlay.hidden { display: none; }
+  .notice-modal {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    max-width: 440px;
+    width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 28px 26px 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .notice-close {
+    position: absolute; top: 14px; right: 14px;
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--panel-2);
+    color: var(--muted); font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .notice-close:hover { color: var(--text); }
+  .notice-title { font-size: 18px; font-weight: 700; margin: 0 0 6px; line-height: 1.35; }
+  .notice-sub { font-size: 13px; color: var(--muted); margin: 0 0 18px; line-height: 1.5; }
+  .notice-sub b { color: var(--gold); font-weight: 600; }
+
+  .notice-section { background: var(--panel-2); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; }
+  .notice-row { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; padding: 3px 0; }
+  .notice-label { color: var(--muted); }
+  .notice-value { color: var(--text); }
+  .notice-value b { color: var(--gold); }
+  .notice-heading { font-size: 12px; color: var(--teal); font-weight: 600; margin: 0 0 6px; }
+  .notice-list { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--text); line-height: 1.65; }
+  .notice-list li { margin-bottom: 2px; }
+  .notice-list b { color: var(--text); }
+
+  .notice-link {
+    display: block; text-align: center; font-size: 12.5px; color: var(--teal);
+    text-decoration: none; border: 1px solid rgba(45,212,191,0.35); border-radius: 8px;
+    padding: 9px; margin: 4px 0 16px;
+  }
+  .notice-link:hover { background: rgba(45,212,191,0.08); }
+
+  .notice-confirm {
+    width: 100%; background: var(--gold); color: #241a03; font-weight: 700;
+    font-size: 14px; border: none; border-radius: 9px; padding: 12px; cursor: pointer;
+  }
+  .notice-confirm:hover { filter: brightness(1.08); }
+
+  @media (max-width: 480px) { .notice-modal { padding: 24px 18px 20px; } }
+</style>
+</head>
+<body>
+
+<div class="notice-overlay" id="noticeOverlay">
+  <div class="notice-modal">
+    <button class="notice-close" id="noticeClose" aria-label="Close">✕</button>
+    <h2 class="notice-title" data-i18n="noticeTitle">이사했다면 꼭 확인하세요</h2>
+    <p class="notice-sub" data-i18n-html="noticeSub"><b>체류지(주소) 변경 신고</b>, 놓치면 과태료가 나올 수 있어요</p>
+
+    <div class="notice-section">
+      <div class="notice-row">
+        <span class="notice-label" data-i18n="noticeDeadlineLabel">⏰ 신고 기한</span>
+        <span class="notice-value" data-i18n-html="noticeDeadlineValue">전입일로부터 <b>15일 이내</b></span>
+      </div>
+      <div class="notice-row">
+        <span class="notice-label" data-i18n="noticeFineLabel">⚠️ 미신고 시</span>
+        <span class="notice-value" data-i18n-html="noticeFineValue">최대 <b>100만원 이하 과태료</b></span>
+      </div>
+    </div>
+
+    <div class="notice-section">
+      <p class="notice-heading" data-i18n="noticeHowHeading">신고 방법 (택 1)</p>
+      <ul class="notice-list">
+        <li data-i18n-html="noticeHowOnline"><b>온라인</b> — 정부24 또는 하이코리아(HiKorea) 웹사이트</li>
+        <li data-i18n-html="noticeHowVisit"><b>방문</b> — 새 주소지 관할 주민센터(행정복지센터) 또는 출입국·외국인사무소</li>
+      </ul>
+    </div>
+
+    <div class="notice-section">
+      <p class="notice-heading" data-i18n="noticeDocsHeading">준비 서류</p>
+      <ul class="notice-list">
+        <li data-i18n="noticeDocs1">외국인등록증, 여권</li>
+        <li data-i18n="noticeDocs2">거주지 입증 서류 (임대차계약서, 기숙사비 영수증, 숙소제공 확인서 등 중 1개)</li>
+      </ul>
+    </div>
+
+    <a class="notice-link" href="https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=12700000026" target="_blank" rel="noopener" data-i18n="noticeLink">
+      정부24에서 신고 방법 자세히 보기 →
+    </a>
+
+    <button class="notice-confirm" id="noticeConfirm" data-i18n="noticeConfirm">확인했어요</button>
+  </div>
+</div>
+
+<header>
+  <h1 data-i18n-html="headerTitle">🏠 <span>국민대학교</span> 근처 자취방 리스트</h1>
+  <p class="sub" data-i18n="headerSub">성북구·강북구 원룸텔·고시원·쉐어하우스 통합 · 편의점/카페/마트/병원/세탁소/우체국까지 확인</p>
+  <div class="region-tabs" id="regionTabs"></div>
+  <div class="lang-switch" id="langSwitch">
+    <button class="lang-btn active" data-lang="ko">한국어</button>
+    <button class="lang-btn" data-lang="en">English</button>
+    <button class="lang-btn" data-lang="vi">Tiếng Việt</button>
+  </div>
+  <div class="controls">
+    <input type="text" id="q" placeholder="이름, 동네로 검색" data-i18n-placeholder="searchPlaceholder">
+    <select id="typeFilter"></select>
+    <input type="number" id="maxRent" placeholder="최대 월세(만원)" data-i18n-placeholder="maxRentPlaceholder">
+    <select id="sort">
+      <option value="distance" data-i18n="sortDistance">학교와 가까운 순</option>
+      <option value="rentMin" data-i18n="sortRent">월세 낮은 순</option>
+      <option value="deposit" data-i18n="sortDeposit">보증금 낮은 순</option>
+    </select>
+  </div>
+  <div class="quick-row" id="priceChips"></div>
+  <div class="quick-row">
+    <div class="qchip fav" id="favChip" data-i18n="favChip">♥ 찜한 곳만</div>
+    <div class="qchip" id="bathChip" data-i18n="bathChip">🚽 개인화장실만</div>
+    <div class="qchip" id="acChip" data-i18n="acChip">❄️ 개인에어컨만</div>
+  </div>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<main>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">
+    <span data-i18n="emptyText">조건에 맞는 매물이 없어요. 검색어나 필터를 조정해보세요.</span>
+    <br><button id="resetBtn" data-i18n="resetBtn">필터 초기화</button>
+  </div>
+  <p class="footnote" data-i18n="footnote">
+    ※ "정확한 주소 비공개(동 중심 좌표 기준)" 표시가 있는 매물(52건 중 29건)은 원본 데이터에
+    지번이 없어 동 대표 좌표로 지오코딩되었습니다. 이 경우 같은 동의 다른 매물과 편의시설·거리
+    정보가 동일하게 나올 수 있으며, 실제 위치와 차이가 있을 수 있습니다.
+    "직선거리 추정" 표시가 있는 매물은 도보/실거리 정보 없이 좌표 간 직선거리로 계산한 값입니다.
+    보증금·월세·옵션 등은 수집 시점 기준이며, 계약 전 반드시 고방/카카오맵 링크에서
+    최신 정보를 다시 확인하세요.
+  </p>
+</main>
+
+<script>
+const DATA = [{"name": "갤럭시원룸텔", "type": "고시원", "region": "강북구", "distanceKm": 3.41, "distanceEstimated": false, "addressPrecise": true, "rentMin": 40.0, "rentMax": 40.0, "rentRaw": "40", "deposit": "없음", "maintenance": "정보없음", "privateBathroom": "O(개인)", "ac": "O(개인)", "subwayName": "수유역 4호선", "subwayDistanceM": 277, "phone": null, "address": "서울 강북구 수유동 190-6", "notes": "수유역 도보권(281m) · 2주~, 주차공간, 엘리베이터, 주소이전, 현금영수증, 신용카드", "gobangUrl": "https://gobang.kr/place/7506", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 수유동 190-6", "lat": 37.6403744873914, "lng": 127.025773953453, "amenities": ["🏪 GS25 수유이화점 87m", "☕ 히치케이커 32m", "🛒 G마트 130m", "🏥 미래로치과의원 98m", "🧺 크린업24 강북구청점 113m", "📮 서울수유3동우체국 271m"]}, {"name": "노마드하우스 프리미엄 원룸텔 미아점", "type": "원룸텔/고시원", "region": "강북구", "distanceKm": 1.72, "distanceEstimated": false, "addressPrecise": true, "rentMin": 65.0, "rentMax": 75.0, "rentRaw": "65~75", "deposit": "50", "maintenance": "정보없음", "privateBathroom": "O(개인)", "ac": "O(개인)", "subwayName": "삼양사거리역 우이신설선", "subwayDistanceM": 155, "phone": null, "address": "서울 강북구 미아동 745-28", "notes": "삼양사거리역 도보권(155m) · 외국어 응대, 커피머신, 웰컴박스, 청소업체, 경비업체, 공기청정기", "gobangUrl": "https://gobang.kr/place/7501", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 745-28", "lat": 37.6222174584983, "lng": 127.019136820895, "amenities": ["🏪 GS25 삼양사거리역점 102m", "☕ 도란도란솔마루카페 57m", "🛒 동북식자재마트 199m", "🏥 효성요양병원 117m", "🧺 은하세탁소 130m", "📮 서울삼양동우체국 196m"]}, {"name": "다정하우스(국민대, 정릉역)", "type": "쉐어하우스(빌라/다가구)", "region": "성북구", "distanceKm": 3.28, "distanceEstimated": true, "addressPrecise": false, "rentMin": null, "rentMax": null, "rentRaw": "문의 필요", "deposit": "문의 필요", "maintenance": "관리비 포함형(전기·가스 등 공과금+공용물품+월청소 포함)", "privateBathroom": "공용(화장실 1개, 4명 공동사용)", "ac": "정보없음", "subwayName": null, "subwayDistanceM": null, "phone": null, "address": "서울 성북구 정릉동", "notes": "우이신설선 정릉역 도보 3~4분, 정릉역에서 버스로 국민대 바로 이동. 방 3개(1인실2·2인실1) 총 4명 거주 빌라. 1년 이상 계약 시 매월 3만원 할인 + 방학기간(4개월) 대학생 특별할인 매월 10만원. 최소계약기간 6개월. 현재(크롤링 시점) 공실 없음 — 정확한 보증금/월세는 직거래 문의 필요.", "gobangUrl": "https://dgdr.co.kr/branch/147", "kakaoUrl": "https://map.kakao.com/link/search/서울 성북구 정릉동", "lat": 37.618580825547, "lng": 126.995482832879, "amenities": ["🏪 GS25 성북북한산점 419m", "☕ 무위산방 374m"]}, {"name": "더스테이 수유역점", "type": "원룸텔", "region": "성북구", "distanceKm": 3.1, "distanceEstimated": false, "addressPrecise": true, "rentMin": 50.0, "rentMax": 62.0, "rentRaw": "50~62", "deposit": "15", "maintenance": "없음", "privateBathroom": "O(전실 개인화장실, 원룸형 30실)", "ac": "O(개인)", "subwayName": "수유역 4호선", "subwayDistanceM": 265, "phone": null, "address": "서울 강북구 수유동 2-39", "notes": "국민대에서 약 4~5km(강북구 수유동, 수유역 도보 4분). 성별무관, 20~60세, 1개월부터 계약 가능, 개인세탁기·주소이전 가능, 외국인 응대, 주차 가능.", "gobangUrl": "https://gobang.kr/place/11150", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 수유동 2-39", "lat": 37.6370718410808, "lng": 127.022683995196, "amenities": ["🏪 CU 에피소드수유점 57m", "☕ 요거트아이스크림의정석 수유점 18m", "🛒 CU 강북수유점 75m", "🏥 심외과의원 78m", "🧺 런드리24 수유838점 54m", "📮 서울인수동 우편취급국 280m"]}, {"name": "동선동2가 직거래 원룸(당근)", "type": "원룸(분리형)", "region": "성북구", "distanceKm": 2.31, "distanceEstimated": true, "addressPrecise": true, "rentMin": 120.0, "rentMax": 120.0, "rentRaw": "120", "deposit": "100", "maintenance": "5(수도·인터넷 포함)", "privateBathroom": "정보없음(매물설명에 화장실 언급 없음, 방1개)", "ac": "O", "subwayName": null, "subwayDistanceM": null, "phone": null, "address": "서울특별시 성북구 보문로30나길 37-1 (동선동2가)", "notes": "국민대에서 약 3km(성신여대 정문 앞, 성신여대입구역 도보 9분). 단기 전용, 즉시입주 가능, 침대·세탁기·인덕션 등 풀옵션, 주차 불가.", "gobangUrl": "https://realty.daangn.com/articles/2020075", "kakaoUrl": "https://map.kakao.com/link/search/서울특별시 성북구 보문로30나길 37-1 (동선동2가)", "lat": 37.5910750177328, "lng": 127.020210164644, "amenities": ["🏪 GS25 성신여대점 21m", "☕ 성신옥 9m", "🛒 대서양식자재마트 379m", "🏥 팔레트정신건강의학과의원 263m", "🧺 도래사세탁소 56m", "📮 서울돈암동우체국 409m"]}, {"name": "드림 고시텔", "type": "원룸텔(고시원)", "region": "성북구", "distanceKm": 1.92, "distanceEstimated": true, "addressPrecise": true, "rentMin": 40.0, "rentMax": 50.0, "rentRaw": "40~50", "deposit": "30", "maintenance": "없음", "privateBathroom": "O(전실 개인화장실)", "ac": "O(개인)", "subwayName": null, "subwayDistanceM": null, "phone": null, "address": "서울 강북구 미아동 197-17", "notes": "국민대에서 약 4~5km(강북구 미아동, 4호선 미아역 도보 1분). 성별무관, 20~59세, 기간 제한 없음, 엘리베이터 있음, 외국인 응대.", "gobangUrl": "https://gobang.kr/place/15218", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 197-17", "lat": 37.6269125895478, "lng": 127.026590029703, "amenities": ["🏪 CU 미아역점 76m", "☕ 케이즈커피 23m", "🛒 홈플러스익스프레스 미아점 306m", "🏥 위즈동물병원 33m", "🧺 제천세탁 128m", "📮 서울강북우체국 342m"]}, {"name": "루미에르스테이", "type": "원룸텔", "region": "강북구", "distanceKm": 3.01, "distanceEstimated": false, "addressPrecise": true, "rentMin": 70.0, "rentMax": 70.0, "rentRaw": "70", "deposit": "10", "maintenance": "정보없음", "privateBathroom": "O(개인)", "ac": "O(개인)", "subwayName": "수유역 4호선", "subwayDistanceM": 345, "phone": null, "address": "서울 강북구 수유동 7-14", "notes": "수유역 도보권(344m) · 엘리베이터, 주차공간, 외국어 응대", "gobangUrl": "https://gobang.kr/place/15680", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 수유동 7-14", "lat": 37.6361576026505, "lng": 127.022256819217, "amenities": ["🏪 세븐일레븐 수유대한점 26m", "☕ 하늬 28m", "🛒 부강할인마트 108m", "🏥 심외과의원 52m", "🧺 런드리24 수유838점 123m", "📮 서울인수동 우편취급국 201m"]}, {"name": "릴리하우스 솔샘역점", "type": "쉐어하우스(아파트)", "region": "성북구", "distanceKm": 2.17, "distanceEstimated": true, "addressPrecise": true, "rentMin": 50.0, "rentMax": 50.0, "rentRaw": "50", "deposit": "100", "maintenance": "8", "privateBathroom": "공용(화장실 1개, 방 1개만 쉐어하는 구조)", "ac": "공용에어컨(개인 아님)", "subwayName": null, "subwayDistanceM": null, "phone": null, "address": "서울 강북구 미아동 1354", "notes": "국민대 근접 지역으로 안내됨(강북구 미아동, 솔샘역 도보 4~5분). 여성전용, 20~39세, 6개월 이상 계약, 25평 아파트에서 방 1개 쉐어, 전기·수도·가스·공용물품비 관리비 포함.", "gobangUrl": "https://gobang.kr/place/6818", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 1354", "lat": 37.6211496720682, "lng": 127.010827075164, "amenities": ["🏪 GS25 미아벽산점 137m", "☕ 카페일분 미아점 125m", "🏥 유성현의원 133m", "🧺 동양세탁소 116m"]}, {"name": "메가스테이 성신여대", "type": "원룸텔", "region": "성북구", "distanceKm": 2.08, "distanceEstimated": false, "addressPrecise": true, "rentMin": 70.0, "rentMax": 80.0, "rentRaw": "70~80", "deposit": "20", "maintenance": "없음", "privateBathroom": "O(전실 개인화장실)", "ac": "O(개인)", "subwayName": null, "subwayDistanceM": null, "phone": "010-9334-0840", "address": "서울 성북구 동선동1가 3-5", "notes": "국민대에서 약 3km(성신여대입구역 도보 1분, 초역세권). 여성전용, 20~39세, 개인세탁기·주소이전 가능, 일본어 응대. 성신여대·고려대·한성대 인근.", "gobangUrl": "https://gobang.kr/place/10891", "kakaoUrl": "http://place.map.kakao.com/1411323201", "lat": 37.5919702569768, "lng": 127.017289334255, "amenities": ["🏪 GS25 성신로데오점 48m", "☕ 하이오커피 성신여대점 30m", "🛒 대서양식자재마트 103m", "🏥 더플러스성모의원 35m", "🧺 에덴의상실 110m", "📮 서울돈암동우체국 241m"]}, {"name": "명지고시원", "type": "고시원", "region": "성북구", "distanceKm": 1.68, "distanceEstimated": true, "addressPrecise": true, "rentMin": 28.0, "rentMax": 36.0, "rentRaw": "28~36", "deposit": "없음", "maintenance": "없음", "privateBathroom": "일부(원룸형 2개만 개인화장실, 미니룸 10개는 공용)", "ac": "O(개인)", "subwayName": null, "subwayDistanceM": null, "phone": null, "address": "서울 성북구 정릉동 266-135", "notes": "북한산보국문역 도보 5분, 국민대 약 15분 거리(서경대 3분). 외국인 응대 표시, 성별무관, 기간 제한 없음.", "gobangUrl": "https://gobang.kr/place/24324", "kakaoUrl": "https://map.kakao.com/link/search/서울 성북구 정릉동 266-135", "lat": 37.6121634434859, "lng": 127.012180466141, "amenities": ["🏪 GS25 정릉금성점 65m", "☕ 화채홀릭 96m", "🏥 정릉부부치과 298m", "🧺 코인워시24빨래터 서경대점 114m", "📮 서경대학교 우편취급국 352m"]}, {"name": "미아 아띠하우스2 , 3", "type": "원룸텔", "region": "강북구", "distanceKm": 1.7, "distanceEstimated": false, "addressPrecise": true, "rentMin": 50.0, "rentMax": 58.0, "rentRaw": "50~58", "deposit": "5", "maintenance": "정보없음", "privateBathroom": "O(개인)", "ac": "O(개인)", "subwayName": "미아역 4호선", "subwayDistanceM": 222, "phone": null, "address": "서울 강북구 미아동 125-11", "notes": "미아역 도보권(222m) · 남녀분리, 청소업체, 식사제공, 주소이전", "gobangUrl": "https://gobang.kr/place/5496", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 125-11", "lat": 37.6250734454754, "lng": 127.027591665681, "amenities": ["🏪 GS25 미아보람점 45m", "☕ 옹쥬르 21m", "🛒 휴대폰성지 테크노마트직영점 67m", "🏥 미아경희치과의원 54m", "🧺 백설세탁빨래방 83m", "📮 서울강북우체국 120m"]}, {"name": "밸류플레이스 성신여대점", "type": "원룸텔(고시원)", "region": "성북구", "distanceKm": 2.08, "distanceEstimated": false, "addressPrecise": true, "rentMin": 57.0, "rentMax": 75.0, "rentRaw": "57~75", "deposit": "20", "maintenance": "없음", "privateBathroom": "O(전실 개인화장실)", "ac": "O(개인)", "subwayName": null, "subwayDistanceM": null, "phone": "02-921-5994", "address": "서울 성북구 동선동3가 195", "notes": "국민대에서 약 3km(성신여대입구역 도보 4분). 성별무관, 39세 이하, 개인세탁기·주소이전 가능, 식사 제공. 2023년 오픈.", "gobangUrl": "https://gobang.kr/place/8771", "kakaoUrl": "http://place.map.kakao.com/1139344902", "lat": 37.5928876149099, "lng": 127.020318563029, "amenities": ["🏪 CU 성북명랑점 101m", "☕ 컴투레스트 커피하우스 44m", "🛒 대서양식자재마트 372m", "🏥 강피부과의원 139m", "🧺 런드리익스프레스샵 성신정문점 24m"]}, {"name": "벙커쉐어하우스", "type": "쉐어하우스", "region": "성북구", "distanceKm": 1.62, "distanceEstimated": true, "addressPrecise": true, "rentMin": 30.0, "rentMax": 40.0, "rentRaw": "30~40", "deposit": "30", "maintenance": "6", "privateBathroom": "공용(공용화장실 1개)", "ac": "O(개인)", "subwayName": null, "subwayDistanceM": null, "phone": null, "address": "서울 성북구 정릉동 226-41", "notes": "북한산보국문역 도보 6분(국민대·서경대 인근). 여성전용, 19~50세, 1개월부터 이용 가능.", "gobangUrl": "https://gobang.kr/place/7120", "kakaoUrl": "https://map.kakao.com/link/search/서울 성북구 정릉동 226-41", "lat": 37.6101401233274, "lng": 127.012739281929, "amenities": ["🏪 GS25 정릉청춘점 115m", "☕ 정릉프레소 135m", "🏥 바른플러스내과의원 273m", "🧺 정혜사세탁 144m"]}, {"name": "봄날스테이", "type": "고시원", "region": "강북구", "distanceKm": 2.83, "distanceEstimated": false, "addressPrecise": true, "rentMin": 25.0, "rentMax": 38.0, "rentRaw": "25~38", "deposit": "3", "maintenance": "정보없음", "privateBathroom": "정보없음", "ac": "정보없음", "subwayName": "수유역 4호선", "subwayDistanceM": 323, "phone": null, "address": "서울 강북구 번동 448-11", "notes": "수유역 도보권(324m) · 주차공간, 엘리베이터, 주소이전, 청소업체, 경비업체, 방역업체", "gobangUrl": "https://gobang.kr/place/11949", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 번동 448-11", "lat": 37.6349965806141, "lng": 127.025016652104, "amenities": ["🏪 세븐일레븐 번동점 10m", "☕ 리게인스터디카페 수유점 51m", "🛒 CU 강북드림점 37m", "🏥 강북경희치과의원 124m", "🧺 형제세탁 99m", "📮 서울인수동 우편취급국 440m"]}, {"name": "비더스테이 미아역점", "type": "고시원", "region": "강북구", "distanceKm": 1.31, "distanceEstimated": false, "addressPrecise": true, "rentMin": 43.0, "rentMax": 56.0, "rentRaw": "43~56", "deposit": "10", "maintenance": "정보없음", "privateBathroom": "O(개인)", "ac": "O(개인)", "subwayName": "미아역 4호선", "subwayDistanceM": 589, "phone": null, "address": "서울 강북구 미아동 322-1", "notes": "미아역 도보권(587m) · 주소이전, 청소업체, 방역업체, 경비업체, 식사제공, 신용카드", "gobangUrl": "https://gobang.kr/place/14995", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 322-1", "lat": 37.6215055119956, "lng": 127.027694218713, "amenities": ["🏪 CU 미아행운점 39m", "☕ 니즈커피 91m", "🛒 하나로마트 미아점 70m", "🏥 새봄마취통증의학과의원 61m", "🧺 현대물워싱 100m", "📮 서울강북우체국 282m"]}, {"name": "비더스테이 수유", "type": "고시원", "region": "강북구", "distanceKm": 2.98, "distanceEstimated": false, "addressPrecise": true, "rentMin": 30.0, "rentMax": 38.0, "rentRaw": "30~38", "deposit": "5~10", "maintenance": "정보없음", "privateBathroom": "정보없음", "ac": "정보없음", "subwayName": "수유역 4호선", "subwayDistanceM": 244, "phone": null, "address": "서울 강북구 번동 415-19", "notes": "수유역 도보권(246m) · 엘리베이터, 주소이전, 식사제공, 청소업체, 방역업체, 현금영수증", "gobangUrl": "https://gobang.kr/place/14128", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 번동 415-19", "lat": 37.6366907921303, "lng": 127.027838075572, "amenities": ["🏪 GS25 번동북부점 59m", "☕ 델디아 9m", "🛒 북부할인마트 183m", "🏥 365매일한방병원 강북수유 165m", "🧺 그린세탁소 99m", "📮 서울수유3동우체국 508m"]}, {"name": "성신여대 S-Stay 원룸텔", "type": "원룸텔", "region": "성북구", "distanceKm": 2.48, "distanceEstimated": true, "addressPrecise": true, "rentMin": null, "rentMax": null, "rentRaw": "문의 필요", "deposit": "문의 필요", "maintenance": "정보없음", "privateBathroom": "O(원룸 타입 기준, 미니룸은 별도 확인 필요)", "ac": "정보없음", "subwayName": null, "subwayDistanceM": null, "phone": null, "address": "서울 성북구 보문로30라길 9(구.동선동2가 65)", "notes": "국민대에서 약 3km(성북구 동선동2가, 성신여대입구역 도보 5분·성신여대 정문 4분). 원룸/미니룸 보유, 엘리베이터·건조기 있음. 로봇 접근 차단 페이지가 아니라 검색 스니펫 기반 정보라 정확한 가격은 전화문의(02-953-3953) 필요.", "gobangUrl": "http://sstay.ainhouse.kr/", "kakaoUrl": "https://map.kakao.com/link/search/서울 성북구 보문로30라길 9(구.동선동2가 65)", "lat": 37.5898357063339, "lng": 127.019107353745, "amenities": ["🏪 GS25 뉴성신미디어점 77m", "☕ 도프 33m", "🛒 대서양식자재마트 373m", "🏥 선치과의원 209m", "🧺 크린토피아 코인워시365 성신여대점 117m", "📮 서울돈암동우체국 302m"]}, {"name": "소담스테이 미아점", "type": "원룸텔", "region": "강북구", "distanceKm": 0.37, "distanceEstimated": false, "addressPrecise": true, "rentMin": 43.0, "rentMax": 55.0, "rentRaw": "43~55", "deposit": "15", "maintenance": "정보없음", "privateBathroom": "O(개인)", "ac": "정보없음", "subwayName": "미아사거리역 4호선", "subwayDistanceM": 141, "phone": null, "address": "서울 강북구 미아동 465-47", "notes": "미아사거리역 도보권(142m) · 주소이전, 현금영수증, 식사제공, 경비업체, 외국어 응대, 엘리베이터", "gobangUrl": "https://gobang.kr/place/9741", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 465-47", "lat": 37.6126804609304, "lng": 127.028666567651, "amenities": ["🏪 CU 성북센터피스점 49m", "☕ 카페051 서울미아사거리역점 28m", "🛒 숭인마트식자재 미아사거리점 109m", "🏥 샤인의원 3m", "🧺 크린토피아 래미안길음센터피스점 75m", "📮 서울송천동우체국 322m"]}, {"name": "수안재스마트", "type": "고시원", "region": "강북구", "distanceKm": 3.94, "distanceEstimated": false, "addressPrecise": true, "rentMin": 46.0, "rentMax": 63.0, "rentRaw": "46~63", "deposit": "46~63", "maintenance": "정보없음", "privateBathroom": "O(개인)", "ac": "O(개인)", "subwayName": "가오리역 우이신설선", "subwayDistanceM": 211, "phone": null, "address": "서울 강북구 수유동 340-13", "notes": "가오리역 도보권(213m) · 남녀분리, 주소이전, 신용카드, 현금영수증, 공기청정기, 경비업체", "gobangUrl": "https://gobang.kr/place/11081", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 수유동 340-13", "lat": 37.6433284847007, "lng": 127.015916171193, "amenities": ["🏪 CU 수유빌리지점 58m", "☕ 수유342 32m", "🛒 국민마트 수유점 51m", "🏥 꼬마동물병원 17m", "🧺 크린토피아 코인워시 수유벽산점 189m", "📮 서울수유동우체국 177m"]}, {"name": "수인하우스", "type": "고시원", "region": "성북구", "distanceKm": 2.4, "distanceEstimated": false, "addressPrecise": true, "rentMin": 35.0, "rentMax": 45.0, "rentRaw": "35~45", "deposit": "5", "maintenance": "없음", "privateBathroom": "O(고지 있음)", "ac": "공용에어컨", "subwayName": null, "subwayDistanceM": null, "phone": null, "address": "서울 성북구 종암동 28-26", "notes": "고려대역 도보 2분(종암동, 성북구). 1개월 이상, 18세 이상, 외국어 응대(영어·일본어), 외국인 응대 표시.", "gobangUrl": "https://gobang.kr/place/6559", "kakaoUrl": "https://map.kakao.com/link/search/서울 성북구 종암동 28-26", "lat": 37.5914469447114, "lng": 127.037532993339, "amenities": ["🏪 CU 고대어진재점 44m", "☕ 지금 여기 동남아 1m", "🏥 성북서울요양병원 234m", "🧺 크린에이드 제기점 147m"]}, {"name": "스카이고시원", "type": "고시원", "region": "강북구", "distanceKm": 2.68, "distanceEstimated": false, "addressPrecise": true, "rentMin": 24.0, "rentMax": 27.0, "rentRaw": "24~27", "deposit": "없음", "maintenance": "정보없음", "privateBathroom": "정보없음", "ac": "정보없음", "subwayName": "수유역 4호선", "subwayDistanceM": 522, "phone": null, "address": "서울 강북구 미아동 160-13", "notes": "수유역 도보권(523m) · 주차공간, 주소이전, 청소업체, 현금영수증, 신용카드, 식사제공", "gobangUrl": "https://gobang.kr/place/8531", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 160-13", "lat": 37.6333831735518, "lng": 127.023768205945, "amenities": ["🏪 세븐일레븐 수유제일점 70m", "☕ 화원커피숍 55m", "🛒 남일마트 128m", "🏥 포근한재활병원 125m", "🧺 런드리업 수유점 91m", "📮 서울인수동 우편취급국 408m"]}, {"name": "스테이업 수유", "type": "원룸텔", "region": "성북구", "distanceKm": 2.92, "distanceEstimated": false, "addressPrecise": true, "rentMin": 45.0, "rentMax": 60.0, "rentRaw": "45~60", "deposit": "10", "maintenance": "없음", "privateBathroom": "일부(원룸형만 개인화장실, 미니룸·샤워룸은 공용화장실 이용)", "ac": "O(개인)", "subwayName": "화계역 우이신설선", "subwayDistanceM": 300, "phone": null, "address": "서울 강북구 수유동 47-39", "notes": "국민대에서 약 4~5km(강북구 수유동, 화계역 도보 4분). 성별무관, 19~65세, 2주부터 계약 가능, 외국어(영어) 응대, 웰컴박스 제공. 방 종류 혼합(미니룸/샤워룸/원룸형).", "gobangUrl": "https://gobang.kr/place/16548", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 수유동 47-39", "lat": 37.6349499278436, "lng": 127.020740587615, "amenities": ["🏪 CU 수유청년주택점 34m", "☕ 문화산도 34m", "🛒 부강할인마트 115m", "🏥 수유정형외과의원 116m", "🧺 세탁폼 116m", "📮 서울인수동 우편취급국 93m"]}, {"name": "신일 고시원", "type": "고시원", "region": "강북구", "distanceKm": 1.97, "distanceEstimated": false, "addressPrecise": true, "rentMin": 30.0, "rentMax": 35.0, "rentRaw": "30~35", "deposit": "없음", "maintenance": "정보없음", "privateBathroom": "정보없음", "ac": "정보없음", "subwayName": "미아역 4호선", "subwayDistanceM": 73, "phone": null, "address": "서울 강북구 미아동 207-3", "notes": "미아역 도보권(67m) · 31일~, 주소이전, 식사제공, 현금영수증", "gobangUrl": "https://gobang.kr/place/16962", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 207-3", "lat": 37.6271106098073, "lng": 127.025439382454, "amenities": ["🏪 GS25 미아신일점 27m", "☕ 무지개커피숍 6m", "🛒 휴대폰할인마트 미아직영점 132m", "🏥 류의원 16m", "🧺 우리세탁수선전문 126m", "📮 서울강북우체국 409m"]}, {"name": "싱글하우스 성신여대점", "type": "고시원", "region": "성북구", "distanceKm": 2.16, "distanceEstimated": false, "addressPrecise": true, "rentMin": 45.0, "rentMax": 65.0, "rentRaw": "45~65", "deposit": "10", "maintenance": "없음", "privateBathroom": "O(전실 개인화장실)", "ac": "정보없음", "subwayName": null, "subwayDistanceM": null, "phone": "070-8065-1776", "address": "서울 성북구 삼선동4가 343", "notes": "국민대에서 약 3.5km(성신여대입구역 도보 4~5분). 남녀분리, 20~40세, 1주부터 계약 가능, 외국인 응대 표시, 주소이전 가능.", "gobangUrl": "https://gobang.kr/place/3074", "kakaoUrl": "http://place.map.kakao.com/17531863", "lat": 37.5905634109207, "lng": 127.01418750825, "amenities": ["🏪 GS25 삼선센터점 12m", "☕ 이모티프커피바 31m", "🛒 대서양식자재마트 256m", "🏥 이라소아청소년과의원 63m", "🧺 동방세탁 51m", "📮 서울돈암동우체국 140m"]}, {"name": "아띠 성신여대", "type": "쉐어하우스", "region": "성북구", "distanceKm": 2.09, "distanceEstimated": true, "addressPrecise": true, "rentMin": 34.0, "rentMax": 52.0, "rentRaw": "34~52", "deposit": "200", "maintenance": "1~10", "privateBathroom": "공용(공용화장실 1개)", "ac": "O(개인)", "subwayName": null, "subwayDistanceM": null, "phone": null, "address": "서울 성북구 동선동4가 182", "notes": "국민대에서 약 3km(성신여대입구역 도보 3분). 여성전용, 20~35세, 6개월 이상 계약, 1년 계약 시 매월 5만원 할인. 총 19개 방(1인실11·2인실6·3인실2).", "gobangUrl": "https://gobang.kr/place/6118", "kakaoUrl": "https://map.kakao.com/link/search/서울 성북구 동선동4가 182", "lat": 37.5946213234496, "lng": 127.017370569237, "amenities": ["🏪 세븐일레븐 성신여대입구점 89m", "☕ 카페노니다 50m", "🛒 대서양식자재마트 283m", "🏥 더서울병원 87m", "🧺 런드리익스프레스샵 성신여대역점 54m"]}, {"name": "아르코하우스", "type": "원룸텔", "region": "강북구", "distanceKm": 0.98, "distanceEstimated": false, "addressPrecise": true, "rentMin": 63.0, "rentMax": 65.0, "rentRaw": "63~65", "deposit": "20", "maintenance": "정보없음", "privateBathroom": "O(개인)", "ac": "O(개인)", "subwayName": "미아사거리역 4호선", "subwayDistanceM": 607, "phone": null, "address": "서울 강북구 미아동 137-18", "notes": "미아사거리역 도보권(611m) · 1주~, 주차공간, 주소이전, 청소업체, 경비업체, 방역업체", "gobangUrl": "https://gobang.kr/place/21042", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 137-18", "lat": 37.6187548134391, "lng": 127.02984214252, "amenities": ["🏪 CU 강북신성점 72m", "☕ 카페24창업센터 미아사거리점 67m", "🛒 씨스페이스 현대마트점 231m", "🏥 비타민치과의원 43m", "🧺 새로나세탁 11m", "📮 서울송천동우체국 362m"]}, {"name": "아이비젼고시원", "type": "고시원", "region": "강북구", "distanceKm": 0.44, "distanceEstimated": false, "addressPrecise": true, "rentMin": 20.0, "rentMax": 26.0, "rentRaw": "20~26", "deposit": "없음", "maintenance": "정보없음", "privateBathroom": "정보없음", "ac": "정보없음", "subwayName": "미아사거리역 4호선", "subwayDistanceM": 69, "phone": null, "address": "서울 강북구 미아동 61-81", "notes": "미아사거리역 도보권(69m) · 관리비 1/n, 식사제공, 주소이전", "gobangUrl": "https://gobang.kr/place/5242", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 61-81", "lat": 37.6138175268677, "lng": 127.02968658646, "amenities": ["🏪 GS25 미아영훈점 106m", "☕ 해성커피 52m", "🛒 숭인마트식자재 미아사거리점 45m", "🏥 김피부과의원 2m", "🧺 크린토피아 래미안길음센터피스점 230m", "📮 서울송천동우체국 187m"]}, {"name": "아이비하우스 고대점", "type": "고시원", "region": "성북구", "distanceKm": 2.3, "distanceEstimated": false, "addressPrecise": true, "rentMin": 32.0, "rentMax": 53.0, "rentRaw": "32~53", "deposit": "10", "maintenance": "없음", "privateBathroom": "O(대부분, 미니룸 2개 제외)", "ac": "O(개인)", "subwayName": null, "subwayDistanceM": null, "phone": null, "address": "서울 성북구 안암동5가 86-10", "notes": "안암역 도보 3분, 고려대 인근(성북구). 1개월~1년, 식사 제공, 외국어 응대(영어), 외국인 응대 표시.", "gobangUrl": "https://gobang.kr/place/8667", "kakaoUrl": "https://map.kakao.com/link/search/서울 성북구 안암동5가 86-10", "lat": 37.5851072744081, "lng": 127.031418968742, "amenities": ["🏪 CU 안암센트럴점 86m", "☕ 커피집 0m", "🏥 휴앤힐 정신건강의학과의원 178m", "🧺 코인워시24빨래방 고려대점 45m", "📮 서울제기2동취급국 192m"]}, {"name": "아이엘원룸텔", "type": "원룸텔", "region": "강북구", "distanceKm": 2.8, "distanceEstimated": false, "addressPrecise": true, "rentMin": 50.0, "rentMax": 50.0, "rentRaw": "50", "deposit": "10", "maintenance": "정보없음", "privateBathroom": "O(개인)", "ac": "O(개인)", "subwayName": "수유역 4호선", "subwayDistanceM": 396, "phone": null, "address": "서울 강북구 미아동 160-1", "notes": "수유역 도보권(399m) · 2주~, 엘리베이터, 주소이전, 방역업체, 신용카드, 현금영수증", "gobangUrl": "https://gobang.kr/place/12260", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 160-1", "lat": 37.6345449651637, "lng": 127.023913364713, "amenities": ["🏪 GS25 수유대로점 23m", "☕ 컴포즈커피 수유사거리점 39m", "🛒 CU 강북드림점 78m", "🏥 강북경희치과의원 47m", "🧺 셀프빨래방 수유역푸르지오시티점 33m", "📮 서울인수동 우편취급국 358m"]}, {"name": "아트원룸텔", "type": "고시원", "region": "강북구", "distanceKm": 0.91, "distanceEstimated": false, "addressPrecise": true, "rentMin": 40.0, "rentMax": 43.0, "rentRaw": "40~43", "deposit": "없음", "maintenance": "정보없음", "privateBathroom": "O(개인)", "ac": "정보없음", "subwayName": "미아사거리역 4호선", "subwayDistanceM": 541, "phone": null, "address": "서울 강북구 미아동 138-17", "notes": "미아사거리역 도보권(542m) · 엘리베이터, 식사제공, 주차공간, 주소이전, 신용카드, 현금영수증", "gobangUrl": "https://gobang.kr/place/7114", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 138-17", "lat": 37.6181562055081, "lng": 127.029808602378, "amenities": ["🏪 GS25 미아유정점 100m", "☕ 카페24창업센터 미아사거리점 5m", "🛒 씨스페이스 현대마트점 228m", "🏥 N동물의료센터 강북점 25m", "🧺 새로나세탁 55m", "📮 서울송천동우체국 295m"]}, {"name": "연스테이호텔", "type": "모텔/고시원/원룸텔", "region": "강북구", "distanceKm": 2.55, "distanceEstimated": false, "addressPrecise": true, "rentMin": 75.0, "rentMax": 75.0, "rentRaw": "75", "deposit": "없음", "maintenance": "정보없음", "privateBathroom": "정보없음", "ac": "O(개인)", "subwayName": "화계역 우이신설선", "subwayDistanceM": 549, "phone": null, "address": "서울 강북구 수유동 86-1", "notes": "화계역 도보권(548m) · 15일~, 엘리베이터, 외국어 응대", "gobangUrl": "https://gobang.kr/place/20775", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 수유동 86-1", "lat": 37.6321049642102, "lng": 127.023219251055, "amenities": ["🏪 GS25 수유하이리움점 49m", "☕ 수유상점101 50m", "🛒 드림마트체인 49m", "🏥 서울미치과의원 50m", "🧺 크린에이드 수유프라자점 50m", "📮 서울인수동 우편취급국 477m"]}, {"name": "오픈하우스 미아사거리역점", "type": "원룸텔(고시원)", "region": "성북구", "distanceKm": 0.48, "distanceEstimated": false, "addressPrecise": true, "rentMin": 35.0, "rentMax": 48.0, "rentRaw": "35~48", "deposit": "없음", "maintenance": "없음", "privateBathroom": "O(전실 개인화장실)", "ac": "O(개인)", "subwayName": "미아사거리역 4호선", "subwayDistanceM": 156, "phone": "02-980-2631", "address": "서울 강북구 미아동 54-126", "notes": "국민대에서 약 4~5km(강북구 미아동, 미아사거리역 도보 3분). 남녀분리, 20~60세, 1개월부터 계약 가능, 식사제공·주소이전 가능, 주차 가능.", "gobangUrl": "https://gobang.kr/place/8724", "kakaoUrl": "http://place.map.kakao.com/1515158517", "lat": 37.6142938185573, "lng": 127.031316962649, "amenities": ["🏪 세븐일레븐 미아롯데점 19m", "☕ 메가MGC커피 미아롯데점 25m", "🛒 경동할인마트 57m", "🏥 행복찾기정신과의원 95m", "🧺 동아세탁소 93m", "📮 서울송천동우체국 204m"]}, {"name": "온더스테이 미아", "type": "고시원", "region": "강북구", "distanceKm": 1.35, "distanceEstimated": false, "addressPrecise": true, "rentMin": 34.0, "rentMax": 45.0, "rentRaw": "34~45", "deposit": "10", "maintenance": "정보없음", "privateBathroom": "정보없음", "ac": "정보없음", "subwayName": "미아역 4호선", "subwayDistanceM": 556, "phone": null, "address": "서울 강북구 미아동 317-7", "notes": "미아역 도보권(559m) · 1주~, 여성전용, 주소이전, 식사제공, 주차공간, 청소업체", "gobangUrl": "https://gobang.kr/place/9240", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 317-7", "lat": 37.6217930424431, "lng": 127.027586035569, "amenities": ["🏪 CU 미아행운점 27m", "☕ 비미남경 미아점 83m", "🛒 하나로마트 미아점 66m", "🏥 최진의원 70m", "🧺 현대물워싱 80m", "📮 서울강북우체국 251m"]}, {"name": "웰빙텔 수유역점", "type": "고시원", "region": "강북구", "distanceKm": 3.51, "distanceEstimated": false, "addressPrecise": true, "rentMin": 35.0, "rentMax": 50.0, "rentRaw": "35~50", "deposit": "1", "maintenance": "정보없음", "privateBathroom": "O(개인)", "ac": "정보없음", "subwayName": "수유역 4호선", "subwayDistanceM": 434, "phone": null, "address": "서울 강북구 수유동 39-30", "notes": "수유역 도보권(434m) · 식사제공, 주소이전, 청소업체, 경비업체, 방역업체, 신용카드", "gobangUrl": "https://gobang.kr/place/4775", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 수유동 39-30", "lat": 37.6407879545585, "lng": 127.022202682201, "amenities": ["🏪 세븐일레븐 수유노해점 49m", "☕ 산수유 89m", "🛒 광산마트 232m", "🏥 24시 바른펫 동물의료센터 72m", "🧺 워시존셀프빨래방 강북점 224m", "📮 서울수유3동우체국 571m"]}, {"name": "유니드하우스 수유점", "type": "원룸텔", "region": "강북구", "distanceKm": 2.94, "distanceEstimated": false, "addressPrecise": true, "rentMin": 50.0, "rentMax": 50.0, "rentRaw": "50", "deposit": "50", "maintenance": "정보없음", "privateBathroom": "O(개인)", "ac": "O(개인)", "subwayName": "화계역 우이신설선", "subwayDistanceM": 404, "phone": null, "address": "서울 강북구 수유동 45-74", "notes": "화계역 도보권(404m) · 3개월~, 엘리베이터, 주소이전, 청소업체, 방역업체, 현금영수증", "gobangUrl": "https://gobang.kr/place/8413", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 수유동 45-74", "lat": 37.6354180731774, "lng": 127.021777815923, "amenities": ["🏪 세븐일레븐 수유점 74m", "☕ 연꽃다방 28m", "🛒 부강할인마트 32m", "🏥 수유정형외과의원 69m", "🧺 런드리라이프 수유점 187m", "📮 서울인수동 우편취급국 151m"]}, {"name": "처음하우스 미아역점", "type": "고시원", "region": "강북구", "distanceKm": 1.62, "distanceEstimated": false, "addressPrecise": true, "rentMin": 32.0, "rentMax": 38.0, "rentRaw": "32~38", "deposit": "5", "maintenance": "정보없음", "privateBathroom": "정보없음", "ac": "정보없음", "subwayName": "미아역 4호선", "subwayDistanceM": 293, "phone": null, "address": "서울 강북구 미아동 126-3", "notes": "미아역 도보권(294m) · 28일~, 여성전용, 주소이전, 청소업체, 식사제공, 현금영수증", "gobangUrl": "https://gobang.kr/place/10943", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 126-3", "lat": 37.6242206296309, "lng": 127.027340440715, "amenities": ["🏪 GS25 미아보람점 51m", "☕ 메가MGC커피 미아중앙점 16m", "🛒 홈플러스익스프레스 미아점 2m", "🏥 서울조이내과의원 20m", "🧺 태창세탁소 134m", "📮 서울강북우체국 60m"]}, {"name": "첼로하우스", "type": "원룸텔", "region": "강북구", "distanceKm": 2.6, "distanceEstimated": false, "addressPrecise": true, "rentMin": 50.0, "rentMax": 55.0, "rentRaw": "50~55", "deposit": "10", "maintenance": "정보없음", "privateBathroom": "O(개인)", "ac": "O(개인)", "subwayName": "수유역 4호선", "subwayDistanceM": 579, "phone": null, "address": "서울 강북구 미아동 189-1", "notes": "수유역 도보권(580m) · 신용카드, 공기청정기, 주차공간, 식사제공, 반려동물, 웰컴박스", "gobangUrl": "https://gobang.kr/place/8497", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 189-1", "lat": 37.6327531882108, "lng": 127.024289708002, "amenities": ["🏪 세븐일레븐 수유제일점 30m", "☕ 카페 테이크알 19m", "🛒 본스치킨 미아3동점 73m", "🏥 포근한재활병원 51m", "🧺 런드리업 수유점 29m", "📮 서울인수동 우편취급국 488m"]}, {"name": "코코쉐어하우스(고대점)", "type": "쉐어하우스", "region": "성북구", "distanceKm": 2.91, "distanceEstimated": true, "addressPrecise": true, "rentMin": 28.0, "rentMax": 35.0, "rentRaw": "28~35", "deposit": "50~70", "maintenance": "5", "privateBathroom": "정보 상이(배지엔 개인화장실 표시, 공용시설 항목엔 공용화장실 1개만 안내 — 계약 전 확인 필요)", "ac": "O(개인)", "subwayName": null, "subwayDistanceM": null, "phone": null, "address": "서울 성북구 안암동5가 104-21", "notes": "국민대에서 약 3~4km(성북구 안암동5가, 안암역 도보 4분·고려대 도보 1분). 남성전용, 20~30세, 6개월 이상 계약, 외국인 응대, 방 3개(2인실2·4인실1).", "gobangUrl": "https://gobang.kr/place/5561", "kakaoUrl": "https://map.kakao.com/link/search/서울 성북구 안암동5가 104-21", "lat": 37.5838368812281, "lng": 127.030006174469, "amenities": ["🏪 세븐일레븐 고대본점 58m", "☕ 벌툰 몽유도원 고대점 28m", "🏥 임충남치과의원 82m", "🧺 셀프빨래방 150m", "📮 서울제기2동취급국 62m"]}, {"name": "코코하우스", "type": "게스트하우스/원룸텔", "region": "성북구", "distanceKm": 2.41, "distanceEstimated": true, "addressPrecise": true, "rentMin": 35.0, "rentMax": 70.0, "rentRaw": "35~70", "deposit": "10~20", "maintenance": "없음", "privateBathroom": "일부(1인실 위주, 공용화장실 5개·좌변기10·샤워기10 — 룸별 상이)", "ac": "O(개인)", "subwayName": null, "subwayDistanceM": null, "phone": null, "address": "서울 성북구 정릉동 670-7", "notes": "북한산보국문역 도보 7분(국민대·서경대 인근). 남녀분리, 지하~4층, 엘리베이터 있음, 외국어(영어) 응대, 식사 제공, 주소이전 가능(전입신고 가능해 유학생에게 유용).", "gobangUrl": "https://gobang.kr/place/11230", "kakaoUrl": "https://map.kakao.com/link/search/서울 성북구 정릉동 670-7", "lat": 37.6093129217646, "lng": 127.00376776496, "amenities": ["🏪 GS25 정릉준서점 94m", "☕ 포틀리에 96m", "🏥 플러스요양병원 115m", "🧺 은성컴퓨터크리닝 170m"]}, {"name": "토브하우스 국민대점", "type": "쉐어하우스", "region": "성북구", "distanceKm": 2.92, "distanceEstimated": true, "addressPrecise": true, "rentMin": 48.0, "rentMax": 55.0, "rentRaw": "48~55", "deposit": "100", "maintenance": "3", "privateBathroom": "공용(좌변기·샤워기 각 2개)", "ac": "O(개인)", "subwayName": null, "subwayDistanceM": null, "phone": null, "address": "서울 성북구 정릉동 880-1", "notes": "국민대 도보 약 3분. 여성전용, 6개월 이상 계약, 20세 이상, 외국어(영어) 응대, 2024년 리모델링.", "gobangUrl": "https://gobang.kr/place/13219", "kakaoUrl": "https://map.kakao.com/link/search/서울 성북구 정릉동 880-1", "lat": 37.6083969283376, "lng": 126.997963248345, "amenities": ["🏪 CU 국민대점 103m", "☕ 카페나무 198m", "🏥 서울바른가정의학과의원 150m", "🧺 에스플러스셀프코인빨래방 국민대점 223m", "📮 국민대학교 우편취급국 331m"]}, {"name": "픽셀하우스 강북미아점", "type": "원룸텔", "region": "강북구", "distanceKm": 1.42, "distanceEstimated": false, "addressPrecise": true, "rentMin": 67.0, "rentMax": 75.0, "rentRaw": "67~75", "deposit": "20", "maintenance": "정보없음", "privateBathroom": "O(개인)", "ac": "O(개인)", "subwayName": "미아역 4호선", "subwayDistanceM": 489, "phone": null, "address": "서울 강북구 미아동 131-5", "notes": "미아역 도보권(490m) · 주소이전, 개인세탁기", "gobangUrl": "https://gobang.kr/place/12095", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 131-5", "lat": 37.6225292288431, "lng": 127.028012674596, "amenities": ["🏪 CU 미아행복점 28m", "☕ 니즈커피 76m", "🛒 이마트에브리데이 미아동점 76m", "🏥 김병주치과의원 32m", "🧺 금성세탁 64m", "📮 서울강북우체국 167m"]}, {"name": "픽셀하우스 미아점", "type": "고시원", "region": "성북구", "distanceKm": 2.52, "distanceEstimated": false, "addressPrecise": true, "rentMin": 72.0, "rentMax": 75.0, "rentRaw": "72~75", "deposit": "30", "maintenance": "없음(공과금 포함 월세)", "privateBathroom": "O(전실 개인화장실)", "ac": "O(개인)", "subwayName": "미아역 4호선", "subwayDistanceM": 617, "phone": null, "address": "서울 강북구 미아동 189-5", "notes": "국민대에서 약 4~5km(강북구 미아동, 미아역 도보 8분·성신여대 3분 거리). 성별무관, 20~50세, 2024년 4월 오픈, 개인세탁기·주소이전 가능.", "gobangUrl": "https://gobang.kr/place/10942", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 미아동 189-5", "lat": 37.6320747944691, "lng": 127.024490462701, "amenities": ["🏪 GS25 미아운정그린점 80m", "☕ 더벤티 수유시장점 0m", "🛒 본스치킨 미아3동점 22m", "🏥 김문선치과의원 23m", "🧺 코인워시24 수유점 86m", "📮 서울인수동 우편취급국 552m"]}, {"name": "픽셀하우스 수유점", "type": "원룸텔", "region": "강북구", "distanceKm": 3.12, "distanceEstimated": false, "addressPrecise": true, "rentMin": 72.0, "rentMax": 72.0, "rentRaw": "72", "deposit": "20", "maintenance": "정보없음", "privateBathroom": "O(개인)", "ac": "O(개인)", "subwayName": "수유역 4호선", "subwayDistanceM": 343, "phone": null, "address": "서울 강북구 번동 417-5", "notes": "수유역 도보권(342m) · 주소이전, 개인세탁기, 현금영수증", "gobangUrl": "https://gobang.kr/place/24102", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 번동 417-5", "lat": 37.6380710849479, "lng": 127.029391347366, "amenities": ["🏪 마켓모아모아 번동스타점 96m", "☕ 커피나무꽃향기 84m", "🛒 렌탈종합마트 강북행복점 111m", "🏥 북서울요양병원 58m", "🧺 에코런드렛 강북번동점 94m", "📮 서울수유3동우체국 356m"]}, {"name": "하늘애하우스(국민대점)", "type": "원룸텔", "region": "성북구", "distanceKm": 1.12, "distanceEstimated": false, "addressPrecise": true, "rentMin": 24.0, "rentMax": 40.0, "rentRaw": "24~40", "deposit": "없음", "maintenance": "없음", "privateBathroom": "일부(3층 원룸형만 개인화장실, 2층은 공용)", "ac": "O(개인)", "subwayName": null, "subwayDistanceM": null, "phone": null, "address": "서울 성북구 정릉동 897-20", "notes": "국민대 도보 약 7분. 외국어(영어) 응대 가능, 주차 가능. 미니룸/원룸형 혼합.", "gobangUrl": "https://gobang.kr/place/9211", "kakaoUrl": "http://place.map.kakao.com/8343052", "lat": 37.6075881041277, "lng": 126.997648995231, "amenities": ["🏪 CU 국민대점 150m", "☕ 라미카페 224m", "🏥 서울바른가정의학과의원 178m", "🧺 에스플러스셀프코인빨래방 국민대점 227m", "📮 국민대학교 우편취급국 390m"]}, {"name": "하이스텔 우이동", "type": "모텔/원룸텔", "region": "강북구", "distanceKm": 5.93, "distanceEstimated": false, "addressPrecise": true, "rentMin": 70.0, "rentMax": 70.0, "rentRaw": "70", "deposit": "10", "maintenance": "정보없음", "privateBathroom": "O(개인)", "ac": "O(개인)", "subwayName": "북한산우이역 우이신설선", "subwayDistanceM": 172, "phone": null, "address": "서울 강북구 우이동 12-4", "notes": "북한산우이역 도보권(173m) · 1일~, 주차공간, 주소이전, 청소업체", "gobangUrl": "https://gobang.kr/place/11920", "kakaoUrl": "https://map.kakao.com/link/search/서울 강북구 우이동 12-4", "lat": 37.6613536210705, "lng": 127.01311557039, "amenities": ["🏪 GS25 북한산우이점 35m", "☕ 샤모니 86m", "🛒 성원마트 48m", "🏥 현의원 323m", "🧺 대영크리닝 311m", "📮 서울우이동우편취급국 48m"]}, {"name": "해피원룸(안암동)", "type": "고시원", "region": "성북구", "distanceKm": 2.3, "distanceEstimated": false, "addressPrecise": true, "rentMin": 45.0, "rentMax": 50.0, "rentRaw": "45~50", "deposit": "100", "maintenance": "1/n", "privateBathroom": "일부(원룸형만)", "ac": "O(개인)", "subwayName": null, "subwayDistanceM": null, "phone": null, "address": "서울 성북구 안암동5가 77-2", "notes": "안암역 도보 3분, 고려대 인근(성북구). 4개월 이상 계약, 19~35세, 외국어 응대(영어·중국어).", "gobangUrl": "https://gobang.kr/place/7029", "kakaoUrl": "https://map.kakao.com/link/search/서울 성북구 안암동5가 77-2", "lat": 37.5856850798873, "lng": 127.03176068045, "amenities": ["🏪 GS25 뉴고대민주광장점 100m", "☕ 피카커피 17m", "🏥 사람인치과의원 162m", "🧺 코인워시24빨래방 고려대점 64m", "📮 서울제기2동취급국 262m"]}];
+const REGION_ORDER = [...new Set(DATA.map(d => d.region))];
+
+// ---------------- 다국어(i18n) ----------------
+const I18N = {
+  ko: {
+    headerTitle: '🏠 <span>국민대학교</span> 근처 자취방 리스트',
+    headerSub: '성북구·강북구 원룸텔·고시원·쉐어하우스 통합 · 편의점/카페/마트/병원/세탁소/우체국까지 확인',
+    searchPlaceholder: '이름, 동네로 검색',
+    maxRentPlaceholder: '최대 월세(만원)',
+    typeFilterAll: '매물유형 전체',
+    sortDistance: '학교와 가까운 순',
+    sortRent: '월세 낮은 순',
+    sortDeposit: '보증금 낮은 순',
+    favChip: '♥ 찜한 곳만',
+    bathChip: '🚽 개인화장실만',
+    acChip: '❄️ 개인에어컨만',
+    priceBand0: '30만원 이하', priceBand1: '30~50만원', priceBand2: '50~70만원', priceBand3: '70만원 이상',
+    statCount: '매물 수', statOf: '전체', statMinRent: '최저 월세', statAvgRent: '평균 월세(최소가 기준)', statFav: '찜한 곳',
+    unitEon: '건', unitManwon: '만원',
+    distToCampus: '학교까지', distUnknown: '거리 미확인', distEstimated: ' (직선거리 추정)',
+    rentLabel: '월세', depositLabel: '보증금', maintenanceLabel: '관리비',
+    addressApprox: ' · 정확한 주소 비공개(동 중심 좌표 기준)',
+    amenityApproxNote: '· 편의시설 거리는 동 중심 좌표 기준 추정치',
+    viewGobang: '고방에서 보기 →', viewKakao: '📍 카카오맵', favTitle: '찜하기',
+    amenityEmpty: (label) => `${label} 없음`,
+    amenity: { '🏪': '편의점', '☕': '카페', '🛒': '마트', '🏥': '병원', '🧺': '세탁소', '📮': '우체국' },
+    typeMap: {
+      '고시원': '고시원', '원룸텔': '원룸텔', '쉐어하우스': '쉐어하우스',
+      '원룸(분리형)': '원룸(분리형)', '원룸(오픈형)': '원룸(오픈형)', '투룸': '투룸',
+      '원룸텔(고시원)': '원룸텔(고시원)', '게스트하우스': '게스트하우스', '모텔': '모텔',
+      '빌라/다가구': '빌라/다가구', '아파트': '아파트',
+    },
+    emptyText: '조건에 맞는 매물이 없어요. 검색어나 필터를 조정해보세요.',
+    resetBtn: '필터 초기화',
+    footnote: `※ "정확한 주소 비공개(동 중심 좌표 기준)" 표시가 있는 매물(52건 중 29건)은 원본 데이터에
+    지번이 없어 동 대표 좌표로 지오코딩되었습니다. 이 경우 같은 동의 다른 매물과 편의시설·거리
+    정보가 동일하게 나올 수 있으며, 실제 위치와 차이가 있을 수 있습니다.
+    "직선거리 추정" 표시가 있는 매물은 도보/실거리 정보 없이 좌표 간 직선거리로 계산한 값입니다.
+    보증금·월세·옵션 등은 수집 시점 기준이며, 계약 전 반드시 고방/카카오맵 링크에서
+    최신 정보를 다시 확인하세요.`,
+    noticeTitle: '이사했다면 꼭 확인하세요',
+    noticeSub: '<b>체류지(주소) 변경 신고</b>, 놓치면 과태료가 나올 수 있어요',
+    noticeDeadlineLabel: '⏰ 신고 기한',
+    noticeDeadlineValue: '전입일로부터 <b>15일 이내</b>',
+    noticeFineLabel: '⚠️ 미신고 시',
+    noticeFineValue: '최대 <b>100만원 이하 과태료</b>',
+    noticeHowHeading: '신고 방법 (택 1)',
+    noticeHowOnline: '<b>온라인</b> — 정부24 또는 하이코리아(HiKorea) 웹사이트',
+    noticeHowVisit: '<b>방문</b> — 새 주소지 관할 주민센터(행정복지센터) 또는 출입국·외국인사무소',
+    noticeDocsHeading: '준비 서류',
+    noticeDocs1: '외국인등록증, 여권',
+    noticeDocs2: '거주지 입증 서류 (임대차계약서, 기숙사비 영수증, 숙소제공 확인서 등 중 1개)',
+    noticeLink: '정부24에서 신고 방법 자세히 보기 →',
+    noticeConfirm: '확인했어요',
+  },
+  en: {
+    headerTitle: '🏠 Housing Near <span>Kookmin University</span>',
+    headerSub: 'Studios, goshiwons & share houses in Seongbuk-gu & Gangbuk-gu — with nearby convenience stores, cafes, marts, hospitals, laundromats & post offices',
+    searchPlaceholder: 'Search by name or neighborhood',
+    maxRentPlaceholder: 'Max rent (10K KRW)',
+    typeFilterAll: 'All types',
+    sortDistance: 'Closest to campus',
+    sortRent: 'Lowest rent',
+    sortDeposit: 'Lowest deposit',
+    favChip: '♥ Favorites only',
+    bathChip: '🚽 Private bathroom only',
+    acChip: '❄️ Private AC only',
+    priceBand0: 'Under 300K', priceBand1: '300K–500K', priceBand2: '500K–700K', priceBand3: 'Over 700K',
+    statCount: 'Listings', statOf: 'of', statMinRent: 'Lowest rent', statAvgRent: 'Avg. rent (min price)', statFav: 'Favorites',
+    unitEon: '', unitManwon: '10K KRW',
+    distToCampus: 'to campus', distUnknown: 'Distance unknown', distEstimated: ' (straight-line est.)',
+    rentLabel: 'Rent', depositLabel: 'Deposit', maintenanceLabel: 'Maintenance',
+    addressApprox: ' · Exact address hidden (neighborhood-center coordinates)',
+    amenityApproxNote: '· Amenity distances are estimated from neighborhood-center coordinates',
+    viewGobang: 'View listing (Gobang) →', viewKakao: '📍 Kakao Map', favTitle: 'Add to favorites',
+    amenityEmpty: (label) => `No ${label.toLowerCase()} nearby`,
+    amenity: { '🏪': 'Convenience store', '☕': 'Cafe', '🛒': 'Mart', '🏥': 'Hospital', '🧺': 'Laundromat', '📮': 'Post office' },
+    typeMap: {
+      '고시원': 'Goshiwon', '원룸텔': 'Studio (wonroomtel)', '쉐어하우스': 'Share house',
+      '원룸(분리형)': 'Studio (separate)', '원룸(오픈형)': 'Studio (open-plan)', '투룸': 'Two-room',
+      '원룸텔(고시원)': 'Studio/Goshiwon', '게스트하우스': 'Guesthouse', '모텔': 'Motel',
+      '빌라/다가구': 'Villa/multi-family', '아파트': 'Apartment',
+    },
+    emptyText: 'No listings match your filters. Try adjusting your search.',
+    resetBtn: 'Reset filters',
+    footnote: `※ Listings marked "exact address hidden" (29 of 52) had no lot number in the source
+    data, so they were geocoded to their neighborhood's center point. In these cases, nearby
+    amenities and distances may appear identical to other listings in the same neighborhood and
+    may differ from the real location. Listings marked "straight-line est." show distance
+    calculated directly between coordinates, without real walking/road distance. Deposit, rent,
+    and options reflect the time of collection — always re-check the latest details via the
+    Gobang/Kakao Map links before signing a lease.`,
+    noticeTitle: 'Just moved in? Check this first',
+    noticeSub: 'You may need to file a <b>change of residence report</b> — missing it can mean a fine',
+    noticeDeadlineLabel: '⏰ Deadline',
+    noticeDeadlineValue: 'Within <b>15 days</b> of moving in',
+    noticeFineLabel: '⚠️ If not reported',
+    noticeFineValue: 'Fine of up to <b>₩1,000,000</b>',
+    noticeHowHeading: 'How to report (pick one)',
+    noticeHowOnline: '<b>Online</b> — via Gov24 or HiKorea website',
+    noticeHowVisit: '<b>In person</b> — your new address\'s community service center (dong office) or immigration office',
+    noticeDocsHeading: 'Documents to prepare',
+    noticeDocs1: 'Alien Registration Card, passport',
+    noticeDocs2: 'Proof of residence (lease agreement, dorm fee receipt, housing confirmation letter, etc. — any one)',
+    noticeLink: 'See details on Gov24 →',
+    noticeConfirm: 'Got it',
+  },
+  vi: {
+    headerTitle: '🏠 Nhà trọ gần <span>Đại học Kookmin</span>',
+    headerSub: 'Phòng trọ, goshiwon, share house ở Seongbuk-gu & Gangbuk-gu — kèm cửa hàng tiện lợi, quán cà phê, siêu thị, bệnh viện, tiệm giặt ủi & bưu điện gần đó',
+    searchPlaceholder: 'Tìm theo tên hoặc khu vực',
+    maxRentPlaceholder: 'Tiền thuê tối đa (đơn vị 10K KRW)',
+    typeFilterAll: 'Tất cả loại hình',
+    sortDistance: 'Gần trường nhất',
+    sortRent: 'Tiền thuê thấp nhất',
+    sortDeposit: 'Tiền cọc thấp nhất',
+    favChip: '♥ Chỉ mục yêu thích',
+    bathChip: '🚽 Chỉ nhà vệ sinh riêng',
+    acChip: '❄️ Chỉ máy lạnh riêng',
+    priceBand0: 'Dưới 300K', priceBand1: '300K–500K', priceBand2: '500K–700K', priceBand3: 'Trên 700K',
+    statCount: 'Số phòng', statOf: 'trong', statMinRent: 'Giá thuê thấp nhất', statAvgRent: 'Giá thuê TB (giá tối thiểu)', statFav: 'Yêu thích',
+    unitEon: '', unitManwon: '10K KRW',
+    distToCampus: 'đến trường', distUnknown: 'Chưa rõ khoảng cách', distEstimated: ' (ước tính đường thẳng)',
+    rentLabel: 'Tiền thuê', depositLabel: 'Tiền cọc', maintenanceLabel: 'Phí quản lý',
+    addressApprox: ' · Địa chỉ chính xác không công khai (tọa độ trung tâm phường)',
+    amenityApproxNote: '· Khoảng cách tiện ích là ước tính từ tọa độ trung tâm phường',
+    viewGobang: 'Xem tin đăng (Gobang) →', viewKakao: '📍 Kakao Map', favTitle: 'Thêm vào yêu thích',
+    amenityEmpty: (label) => `Không có ${label.toLowerCase()} gần đây`,
+    amenity: { '🏪': 'Cửa hàng tiện lợi', '☕': 'Quán cà phê', '🛒': 'Siêu thị', '🏥': 'Bệnh viện', '🧺': 'Tiệm giặt ủi', '📮': 'Bưu điện' },
+    typeMap: {
+      '고시원': 'Goshiwon', '원룸텔': 'Phòng studio (wonroomtel)', '쉐어하우스': 'Share house',
+      '원룸(분리형)': 'Studio (tách biệt)', '원룸(오픈형)': 'Studio (mở)', '투룸': 'Căn 2 phòng',
+      '원룸텔(고시원)': 'Studio/Goshiwon', '게스트하우스': 'Guesthouse', '모텔': 'Motel',
+      '빌라/다가구': 'Villa/nhà nhiều hộ', '아파트': 'Chung cư',
+    },
+    emptyText: 'Không có phòng nào phù hợp bộ lọc. Hãy thử điều chỉnh tìm kiếm.',
+    resetBtn: 'Đặt lại bộ lọc',
+    footnote: `※ Các tin đăng có ghi "địa chỉ chính xác không công khai" (29/52) không có số lô đất trong
+    dữ liệu gốc, nên được định vị theo tọa độ trung tâm phường. Trong trường hợp này, tiện ích và
+    khoảng cách xung quanh có thể trùng với các tin khác trong cùng phường và có thể khác vị trí
+    thực tế. Tin đăng có ghi "ước tính đường thẳng" là khoảng cách tính trực tiếp giữa hai tọa độ,
+    không phải khoảng cách đi bộ/đường thực tế. Tiền cọc, tiền thuê và các điều kiện khác được ghi
+    nhận tại thời điểm thu thập — hãy luôn kiểm tra lại thông tin mới nhất qua liên kết Gobang/Kakao
+    Map trước khi ký hợp đồng.`,
+    noticeTitle: 'Vừa chuyển nhà? Hãy kiểm tra điều này trước',
+    noticeSub: 'Bạn có thể cần khai báo <b>thay đổi nơi cư trú</b> — nếu bỏ lỡ có thể bị phạt tiền',
+    noticeDeadlineLabel: '⏰ Thời hạn',
+    noticeDeadlineValue: 'Trong vòng <b>15 ngày</b> kể từ khi chuyển đến',
+    noticeFineLabel: '⚠️ Nếu không khai báo',
+    noticeFineValue: 'Phạt tiền lên đến <b>1.000.000 KRW</b>',
+    noticeHowHeading: 'Cách khai báo (chọn 1)',
+    noticeHowOnline: '<b>Trực tuyến</b> — qua trang web Gov24 hoặc HiKorea',
+    noticeHowVisit: '<b>Trực tiếp</b> — trung tâm hành chính phường (dong office) nơi ở mới hoặc văn phòng xuất nhập cảnh',
+    noticeDocsHeading: 'Giấy tờ cần chuẩn bị',
+    noticeDocs1: 'Thẻ đăng ký người nước ngoài, hộ chiếu',
+    noticeDocs2: 'Giấy tờ chứng minh nơi cư trú (hợp đồng thuê nhà, biên lai phí ký túc xá, giấy xác nhận chỗ ở, v.v. — chọn 1 loại)',
+    noticeLink: 'Xem chi tiết trên Gov24 →',
+    noticeConfirm: 'Đã hiểu',
+  },
+};
+
+let LANG = (localStorage.getItem('kookmin_housing_lang')) || 'ko';
+function t(key) { return I18N[LANG][key]; }
+
+function applyStaticTranslations() {
+  document.documentElement.lang = LANG;
+  document.title = LANG === 'ko' ? '국민대학교 근처 자취방 리스트' : (LANG === 'vi' ? 'Nhà trọ gần Đại học Kookmin' : 'Housing Near Kookmin University');
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (el.tagName === 'OPTION' || el.tagName === 'BUTTON' || el.tagName === 'SPAN' || el.tagName === 'DIV' || el.tagName === 'P' || el.tagName === 'LI' || el.tagName === 'A' || el.tagName === 'H2') {
+      el.textContent = t(key);
+    }
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    el.innerHTML = t(el.dataset.i18nHtml);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === LANG));
+}
+
+
+const els = {
+  q: document.getElementById('q'),
+  typeFilter: document.getElementById('typeFilter'),
+  maxRent: document.getElementById('maxRent'),
+  sort: document.getElementById('sort'),
+  grid: document.getElementById('grid'),
+  empty: document.getElementById('empty'),
+  stats: document.getElementById('stats'),
+  resetBtn: document.getElementById('resetBtn'),
+  regionTabs: document.getElementById('regionTabs'),
+  priceChips: document.getElementById('priceChips'),
+  favChip: document.getElementById('favChip'),
+  bathChip: document.getElementById('bathChip'),
+  acChip: document.getElementById('acChip'),
+};
+
+let activeRegions = new Set(REGION_ORDER);
+let activePriceBand = null;   // {min, max} or null
+let favOnly = false;
+let bathOnly = false;
+let acOnly = false;
+
+const FAV_KEY = 'kookmin_housing_favorites';
+function loadFavorites() {
+  try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); }
+  catch (e) { return new Set(); }
+}
+function saveFavorites(set) {
+  try { localStorage.setItem(FAV_KEY, JSON.stringify([...set])); } catch (e) {}
+}
+let favorites = loadFavorites();
+
+const PRICE_BANDS = [
+  { key: 'priceBand0', min: 0, max: 30 },
+  { key: 'priceBand1', min: 30, max: 50 },
+  { key: 'priceBand2', min: 50, max: 70 },
+  { key: 'priceBand3', min: 70, max: Infinity },
+];
+
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function setupTypeOptions() {
+  const types = [...new Set(DATA.map(d => d.type).filter(Boolean))].sort();
+  els.typeFilter.innerHTML = `<option value="all">${t('typeFilterAll')}</option>` +
+    types.map(ty => `<option value="${escapeHtml(ty)}">${escapeHtml(translateType(ty))}</option>`).join('');
+}
+
+function translateType(ty) {
+  if (!ty) return ty;
+  const map = t('typeMap');
+  // "쉐어하우스(빌라/다가구)" 같은 복합 표기 처리
+  const parenMatch = ty.match(/^(.+?)\((.+)\)$/);
+  if (parenMatch) {
+    const base = map[parenMatch[1]] || parenMatch[1];
+    const inner = parenMatch[2].split('/').map(p => map[p] || p).join('/');
+    return LANG === 'ko' ? `${base}(${inner})` : `${base} (${inner})`;
+  }
+  // "원룸텔/고시원" 같은 슬래시 조합 처리
+  if (ty.includes('/')) {
+    return ty.split('/').map(p => map[p] || p).join('/');
+  }
+  return map[ty] || ty;
+}
+
+function setupRegionTabs() {
+  const counts = {};
+  REGION_ORDER.forEach(r => counts[r] = 0);
+  DATA.forEach(d => { counts[d.region] = (counts[d.region] || 0) + 1; });
+
+  els.regionTabs.innerHTML = REGION_ORDER.map(r => `
+    <div class="region-tab active" data-rg="${escapeHtml(r)}">
+      <span class="dot"></span>${escapeHtml(r)} <span class="count">${counts[r]}</span>
+    </div>`).join('');
+
+  els.regionTabs.querySelectorAll('.region-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const r = tab.dataset.rg;
+      if (activeRegions.has(r)) {
+        if (activeRegions.size === 1) return;
+        activeRegions.delete(r);
+        tab.classList.remove('active');
+      } else {
+        activeRegions.add(r);
+        tab.classList.add('active');
+      }
+      applyFilters();
+    });
+  });
+}
+
+function setupPriceChips() {
+  els.priceChips.innerHTML = PRICE_BANDS.map((b, i) =>
+    `<div class="qchip" data-idx="${i}">${escapeHtml(t(b.key))}</div>`).join('');
+  els.priceChips.querySelectorAll('.qchip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const idx = Number(chip.dataset.idx);
+      const isActive = chip.classList.contains('active');
+      els.priceChips.querySelectorAll('.qchip').forEach(c => c.classList.remove('active'));
+      if (isActive) {
+        activePriceBand = null;
+      } else {
+        activePriceBand = PRICE_BANDS[idx];
+        chip.classList.add('active');
+      }
+      applyFilters();
+    });
+  });
+  if (activePriceBand) {
+    const idx = PRICE_BANDS.indexOf(activePriceBand);
+    if (idx >= 0) els.priceChips.children[idx].classList.add('active');
+  }
+}
+
+function depositNum(d) {
+  const m = String(d.deposit ?? '').match(/\d+(\.\d+)?/);
+  return m ? parseFloat(m[0]) : null;
+}
+
+function isPrivate(text) {
+  return typeof text === 'string' && text.trim().startsWith('O');
+}
+
+function applyFilters() {
+  const q = els.q.value.trim().toLowerCase();
+  const type = els.typeFilter.value;
+  const maxRent = parseFloat(els.maxRent.value);
+
+  let list = DATA.filter(d => {
+    if (!activeRegions.has(d.region)) return false;
+    if (q && !((d.name || '').toLowerCase().includes(q) || (d.address || '').toLowerCase().includes(q))) return false;
+    if (type !== 'all' && d.type !== type) return false;
+    if (!isNaN(maxRent) && d.rentMin != null && d.rentMin > maxRent) return false;
+    if (activePriceBand) {
+      const r = d.rentMin;
+      if (r == null || r < activePriceBand.min || r >= activePriceBand.max) return false;
+    }
+    if (favOnly && !favorites.has(d.name)) return false;
+    if (bathOnly && !isPrivate(d.privateBathroom)) return false;
+    if (acOnly && !isPrivate(d.ac)) return false;
+    return true;
+  });
+
+  const sort = els.sort.value;
+  const byNum = (key) => (a, b) => (a[key] ?? Infinity) - (b[key] ?? Infinity);
+  if (sort === 'distance') list.sort(byNum('distanceKm'));
+  else if (sort === 'rentMin') list.sort(byNum('rentMin'));
+  else if (sort === 'deposit') list.sort((a, b) => (depositNum(a) ?? Infinity) - (depositNum(b) ?? Infinity));
+
+  render(list);
+}
+
+function formatWon(manwon) {
+  return Math.round(manwon * 10000).toLocaleString('en-US');
+}
+
+function cardHtml(d) {
+  const dist = (d.distanceKm ?? null) !== null ? `${d.distanceKm}km` : t('distUnknown');
+  const regionClass = d.region === '성북구' ? 'rg-seongbuk' : 'rg-gangbuk';
+  let rentText;
+  if (d.rentMin != null && d.rentMax != null) {
+    if (LANG !== 'ko') {
+      rentText = d.rentMin === d.rentMax ? `₩${formatWon(d.rentMin)}` : `₩${formatWon(d.rentMin)}–₩${formatWon(d.rentMax)}`;
+    } else {
+      rentText = d.rentMin === d.rentMax ? `${d.rentMin}만원` : `${d.rentMin}~${d.rentMax}만원`;
+    }
+  } else {
+    rentText = d.rentRaw || (LANG === 'ko' ? '문의 필요' : (LANG === 'vi' ? 'Liên hệ' : 'Inquire'));
+  }
+
+  const subwayLine = d.subwayName
+    ? `🚇 <b>${escapeHtml(d.subwayName)}</b>${d.subwayDistanceM != null ? ` (${d.subwayDistanceM}m)` : ''}`
+    : '';
+  const AMENITY_ORDER = ['🏪', '☕', '🛒', '🏥', '🧺', '📮'];
+  const amenityLabels = t('amenity');
+  const foundIcons = {};
+  (d.amenities || []).forEach(a => {
+    const icon = AMENITY_ORDER.find(ic => a.startsWith(ic));
+    if (icon) foundIcons[icon] = a;
+  });
+  const amenityGrid = AMENITY_ORDER.map(icon => {
+    if (foundIcons[icon]) return `<div class="am" title="${escapeHtml(foundIcons[icon])}">${escapeHtml(foundIcons[icon])}</div>`;
+    return `<div class="am am-empty">${icon} ${escapeHtml(t('amenityEmpty')(amenityLabels[icon]))}</div>`;
+  }).join('');
+  const phoneBtn = d.phone
+    ? `<a class="action-btn secondary" href="tel:${escapeHtml(d.phone)}">📞 ${escapeHtml(d.phone)}</a>`
+    : '';
+  const isFav = favorites.has(d.name);
+
+  return `
+    <div class="card">
+      <button class="fav-btn${isFav ? ' active' : ''}" data-fav="${escapeHtml(d.name)}" aria-label="${t('favTitle')}" title="${t('favTitle')}">${isFav ? '♥' : '♡'}</button>
+      <div class="card-top">
+        <div class="tags">
+          <span class="tag ${regionClass}">${escapeHtml(d.region)}</span>
+          <span class="tag">${escapeHtml(translateType(d.type))}</span>
+        </div>
+        <div class="distpill">
+          <div class="n mono">${dist}</div>
+          <div class="l">${t('distToCampus')}${d.distanceEstimated ? t('distEstimated') : ''}</div>
+        </div>
+      </div>
+      <p class="building">${escapeHtml(d.name)}</p>
+      <p class="address">${escapeHtml(d.address)}${!d.addressPrecise ? ` <span class="approx">${escapeHtml(t('addressApprox'))}</span>` : ''}</p>
+      <div class="price-row">
+        <div class="item"><div class="l">${t('rentLabel')}</div><div class="n mono">${escapeHtml(rentText)}</div></div>
+        <div class="item"><div class="l">${t('depositLabel')}</div><div class="n mono">${escapeHtml(d.deposit)}</div></div>
+      </div>
+      <div class="meta">
+        <span>🚽 <b>${escapeHtml(d.privateBathroom)}</b></span>
+        <span>❄️ <b>${escapeHtml(d.ac)}</b></span>
+        <span>🧾 ${t('maintenanceLabel')} <b>${escapeHtml(d.maintenance)}</b></span>
+      </div>
+      ${subwayLine ? `<p class="subway-line">${subwayLine}</p>` : ''}
+      <div class="amenity-grid">${amenityGrid}</div>
+      ${!d.addressPrecise ? `<p style="color:var(--gold); font-size:11px; margin:-4px 0 10px;">${escapeHtml(t('amenityApproxNote'))}</p>` : ''}
+      ${d.notes ? `<p class="notes">${escapeHtml(d.notes)}</p>` : ''}
+      <div class="actions">
+        <a class="action-btn" href="${escapeHtml(d.gobangUrl)}" target="_blank" rel="noopener">${escapeHtml(t('viewGobang'))}</a>
+        <a class="action-btn secondary" href="${escapeHtml(d.kakaoUrl)}" target="_blank" rel="noopener">${escapeHtml(t('viewKakao'))}</a>
+      </div>
+      ${phoneBtn ? `<div class="actions">${phoneBtn}</div>` : ''}
+    </div>
+  `;
+}
+
+function render(list) {
+  els.empty.style.display = list.length ? 'none' : 'block';
+  els.grid.style.display = list.length ? 'grid' : 'none';
+  els.grid.innerHTML = list.map(cardHtml).join('');
+  renderStats(list);
+}
+
+function renderStats(list) {
+  if (!list.length) { els.stats.innerHTML = ''; return; }
+  const withRent = list.filter(d => d.rentMin != null);
+  const avgRent = withRent.length ? Math.round(withRent.reduce((s, d) => s + d.rentMin, 0) / withRent.length) : null;
+  const minRent = withRent.length ? Math.min(...withRent.map(d => d.rentMin)) : null;
+  const wonFmt = (m) => m == null ? '-' : (LANG === 'ko' ? `${m}만원` : `₩${formatWon(m)}`);
+  const eon = t('unitEon') ? t('unitEon') : '';
+
+  els.stats.innerHTML = `
+    <div class="stat"><span class="label">${t('statCount')}</span><span class="value teal mono">${list.length}${eon} <span style="font-size:11px;color:var(--muted)">/ ${t('statOf')} ${DATA.length}${eon}</span></span></div>
+    <div class="stat"><span class="label">${t('statMinRent')}</span><span class="value gold mono">${wonFmt(minRent)}</span></div>
+    <div class="stat"><span class="label">${t('statAvgRent')}</span><span class="value mono">${wonFmt(avgRent)}</span></div>
+    <div class="stat"><span class="label">${t('statFav')}</span><span class="value mono" style="color:#ff6b81">${favorites.size}${eon}</span></div>
+  `;
+}
+
+els.resetBtn.addEventListener('click', () => {
+  els.q.value = ''; els.typeFilter.value = 'all'; els.maxRent.value = ''; els.sort.value = 'distance';
+  activeRegions = new Set(REGION_ORDER);
+  activePriceBand = null; favOnly = false; bathOnly = false; acOnly = false;
+  els.priceChips.querySelectorAll('.qchip').forEach(c => c.classList.remove('active'));
+  els.favChip.classList.remove('active');
+  els.bathChip.classList.remove('active');
+  els.acChip.classList.remove('active');
+  els.regionTabs.querySelectorAll('.region-tab').forEach(t => t.classList.add('active'));
+  applyFilters();
+});
+
+[els.q, els.typeFilter, els.maxRent, els.sort].forEach(el => el.addEventListener('input', applyFilters));
+
+els.favChip.addEventListener('click', () => {
+  favOnly = !favOnly;
+  els.favChip.classList.toggle('active', favOnly);
+  applyFilters();
+});
+els.bathChip.addEventListener('click', () => {
+  bathOnly = !bathOnly;
+  els.bathChip.classList.toggle('active', bathOnly);
+  applyFilters();
+});
+els.acChip.addEventListener('click', () => {
+  acOnly = !acOnly;
+  els.acChip.classList.toggle('active', acOnly);
+  applyFilters();
+});
+
+els.grid.addEventListener('click', (e) => {
+  const btn = e.target.closest('.fav-btn');
+  if (!btn) return;
+  const name = btn.dataset.fav;
+  if (favorites.has(name)) favorites.delete(name); else favorites.add(name);
+  saveFavorites(favorites);
+  applyFilters();
+});
+
+// 체류지 변경신고 안내 팝업
+(function () {
+  const overlay = document.getElementById('noticeOverlay');
+  const closeBtn = document.getElementById('noticeClose');
+  const confirmBtn = document.getElementById('noticeConfirm');
+
+  function closeNotice() {
+    overlay.classList.add('hidden');
+  }
+
+  closeBtn.addEventListener('click', closeNotice);
+  confirmBtn.addEventListener('click', closeNotice);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeNotice(); });
+})();
+
+setupTypeOptions();
+setupRegionTabs();
+setupPriceChips();
+applyStaticTranslations();
+applyFilters();
+
+document.getElementById('langSwitch').addEventListener('click', (e) => {
+  const btn = e.target.closest('.lang-btn');
+  if (!btn || btn.dataset.lang === LANG) return;
+  LANG = btn.dataset.lang;
+  try { localStorage.setItem('kookmin_housing_lang', LANG); } catch (err) {}
+  applyStaticTranslations();
+  setupTypeOptions();
+  setupPriceChips();
+  applyFilters();
+});
+</script>
+</body>
+</html>
