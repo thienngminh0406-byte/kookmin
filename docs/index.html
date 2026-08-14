@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>국민대학교 근처 자취방 리스트</title>
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a1120; --panel: #121b2e; --panel-2: #17233b; --border: #223252;
+    --text: #e7ecf3; --muted: #8fa0be; --teal: #2dd4bf; --gold: #e3b341;
+    --seongbuk: #60a5fa; --gangbuk: #fb923c;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'Pretendard', 'Noto Sans Myanmar', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  header { position: sticky; top: 0; z-index: 10; background: rgba(10,17,32,0.92);
+    backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); padding: 20px 28px 16px; }
+  header h1 { margin: 0 0 2px; font-size: 22px; letter-spacing: -0.01em; }
+  header h1 span { color: var(--teal); }
+  header p.sub { margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+
+  .region-tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .region-tab { display: flex; align-items: center; gap: 6px; background: var(--panel);
+    border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px;
+    font-size: 12.5px; color: var(--muted); cursor: pointer; user-select: none; }
+  .region-tab .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .region-tab.active { color: var(--text); border-color: currentColor; }
+  .region-tab[data-rg="성북구"].active { color: var(--seongbuk); }
+  .region-tab[data-rg="성북구"] .dot { background: var(--seongbuk); }
+  .region-tab[data-rg="강북구"].active { color: var(--gangbuk); }
+  .region-tab[data-rg="강북구"] .dot { background: var(--gangbuk); }
+  .region-tab .count { color: var(--muted); font-size: 11px; }
+
+  .lang-switch { display: inline-flex; gap: 4px; margin-bottom: 10px; }
+  .lang-btn {
+    font-family: inherit; font-size: 11.5px; padding: 5px 11px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--panel); color: var(--muted); cursor: pointer;
+  }
+  .lang-btn.active { background: var(--teal); color: #06251f; border-color: var(--teal); font-weight: 600; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .controls input[type="text"], .controls select, .controls input[type="number"] {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; }
+  .controls input[type="text"] { flex: 1 1 220px; min-width: 160px; }
+  .controls input[type="number"] { width: 110px; }
+
+  .quick-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .qchip { background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 999px; padding: 6px 12px; font-size: 12px; cursor: pointer; user-select: none;
+    display: inline-flex; align-items: center; gap: 4px; }
+  .qchip.active { color: var(--text); border-color: var(--teal); background: rgba(45,212,191,0.1); }
+  .qchip.fav.active { color: #ff6b81; border-color: #ff6b81; background: rgba(255,107,129,0.1); }
+  .qchip .sep { width: 1px; height: 12px; background: var(--border); margin: 0 2px; }
+
+  .stats { display: flex; gap: 22px; padding: 14px 28px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat .label { font-size: 11px; color: var(--muted); }
+  .stat .value { font-size: 18px; font-weight: 600; }
+  .stat .value.teal { color: var(--teal); }
+  .stat .value.gold { color: var(--gold); }
+
+  main { padding: 20px 28px 60px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+
+  .card { position: relative; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px 16px 14px; transition: border-color 0.15s, transform 0.15s; }
+  .card:hover { border-color: var(--teal); transform: translateY(-2px); }
+
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 11px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
+  .tag.rg-seongbuk { color: var(--seongbuk); border-color: rgba(96,165,250,0.4); background: rgba(96,165,250,0.08); }
+  .tag.rg-gangbuk { color: var(--gangbuk); border-color: rgba(251,146,60,0.4); background: rgba(251,146,60,0.08); }
+
+  .distpill { flex-shrink: 0; text-align: right; background: rgba(45,212,191,0.08);
+    border: 1px solid rgba(45,212,191,0.35); border-radius: 8px; padding: 4px 8px; }
+  .distpill .n { color: var(--teal); font-weight: 700; font-size: 13px; }
+  .distpill .l { color: var(--muted); font-size: 9px; letter-spacing: 0.02em; }
+
+  .building { font-size: 15px; font-weight: 600; margin: 0 0 2px; }
+  .address { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; line-height: 1.4; }
+  .address .approx { color: var(--gold); }
+
+  .price-row { display: flex; gap: 18px; margin-bottom: 10px; flex-wrap: wrap; }
+  .price-row .item .l { font-size: 10.5px; color: var(--muted); margin-bottom: 1px; }
+  .price-row .item .n { font-size: 17px; font-weight: 600; }
+
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted);
+    border-top: 1px dashed var(--border); padding-top: 10px; margin-bottom: 10px; }
+  .meta b { color: var(--text); font-weight: 500; }
+
+  .subway-line { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+  .subway-line b { color: var(--text); }
+
+  .amenities { font-size: 11.5px; color: var(--teal); line-height: 1.6; margin: 0 0 10px; }
+  .amenity-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px 10px;
+    font-size: 11.5px; color: var(--teal); margin: 0 0 10px; }
+  .amenity-grid .am { line-height: 15px; white-space: normal; word-break: keep-all;
+    overflow-wrap: break-word; }
+  .amenity-grid .am.am-empty { color: #3d4a63; }
+
+  .fav-btn { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px;
+    border-radius: 50%; border: 1px solid var(--border); background: var(--panel-2);
+    color: var(--muted); font-size: 15px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; line-height: 1; }
+  .fav-btn.active { color: #ff6b81; border-color: #ff6b81; background: rgba(255,107,129,0.1); }
+  .card-top { padding-right: 34px; }
+
+  .notes { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 0 0 12px;
+    background: var(--panel-2); border-radius: 8px; padding: 9px 11px; }
+
+  .actions { display: flex; gap: 6px; }
+  .actions + .actions { margin-top: 6px; }
+  .action-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+    font-size: 11.5px; font-weight: 600; color: #06251f; text-decoration: none;
+    background: var(--teal); border-radius: 8px; padding: 9px 4px; text-align: center; white-space: nowrap; }
+  .action-btn:hover { filter: brightness(1.08); }
+  .action-btn.secondary { background: transparent; color: var(--muted); border: 1px solid var(--border); font-weight: 500; }
+  .action-btn.secondary:hover { background: var(--panel-2); }
+
+  .empty { text-align: center; color: var(--muted); padding: 80px 20px; }
+  .loading-msg { grid-column: 1 / -1; padding: 60px 20px; text-align: center; color: var(--muted); font-size: 13px; line-height: 1.7; }
+  .loading-msg.error { color: #ff8080; }
+  .empty button { margin-top: 12px; background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 16px; cursor: pointer; font-family: inherit; }
+
+  .footnote { max-width: 900px; margin: 10px auto 0; padding: 0 16px; color: var(--muted);
+    font-size: 12px; line-height: 1.6; }
+
+  .footnote-box { max-width: 900px; margin: 30px auto 0; border-top: 1px dashed var(--border); padding-top: 12px; }
+  .footnote-toggle {
+    display: flex; align-items: center; gap: 6px; width: 100%;
+    background: none; border: none; color: var(--muted); font-size: 12px;
+    font-family: inherit; cursor: pointer; padding: 0 16px;
+  }
+  .footnote-toggle:hover { color: var(--text); }
+  .footnote-toggle .chevron { transition: transform 0.15s; margin-left: auto; }
+  .footnote-box.open .footnote-toggle .chevron { transform: rotate(180deg); }
+  .footnote { display: none; }
+  .footnote-box.open .footnote { display: block; }
+  .checklist { list-style: none; margin: 8px 16px 0; padding: 0; max-width: 900px; }
+  .checklist li {
+    font-size: 12.5px; color: var(--text); line-height: 1.6;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist b { color: var(--teal); font-weight: 600; }
+
+  .header-top-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .filter-toggle {
+    display: none; align-items: center; gap: 6px; white-space: nowrap;
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    font-family: inherit; font-size: 12.5px; padding: 8px 12px; border-radius: 8px; cursor: pointer;
+    margin-top: 2px;
+  }
+  .filter-toggle .chevron { transition: transform 0.15s; }
+  .filter-toggle.open .chevron { transform: rotate(180deg); }
+
+  @media (max-width: 760px) {
+    .filter-toggle { display: inline-flex; }
+    .filter-panel { display: none; }
+    .filter-panel.open { display: block; }
+  }
+
+  @media (max-width: 520px) { header, .stats, main { padding-left: 16px; padding-right: 16px; } }
+
+  .collected-badge { font-size: 11px; color: var(--muted); margin: 4px 0 0; }
+
+  .toolbar-row { display: flex; gap: 8px; padding: 0 28px 12px; flex-wrap: wrap; }
+  .tool-btn {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 12px;
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    font-family: inherit; padding: 7px 12px; border-radius: 8px; cursor: pointer;
+  }
+  .tool-btn:hover { border-color: var(--teal); color: var(--teal); }
+
+  .recent-strip { padding: 0 28px 16px; display: flex; gap: 8px; overflow-x: auto; }
+  .recent-strip .rchip {
+    flex: 0 0 auto; font-size: 11.5px; color: var(--text); background: var(--panel);
+    border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; cursor: pointer;
+    white-space: nowrap;
+  }
+  .recent-strip .rchip:hover { border-color: var(--teal); }
+  .recent-strip .rlabel { font-size: 11.5px; color: var(--muted); align-self: center; margin-right: 2px; white-space: nowrap; }
+
+  .compare-overlay {
+    position: fixed; inset: 0; z-index: 100; background: rgba(5,9,18,0.78);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .compare-overlay.hidden { display: none; }
+  .compare-modal {
+    position: relative; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 16px; max-width: 760px; width: 100%; max-height: 85vh;
+    overflow: hidden; padding: 26px 24px 20px; display: flex; flex-direction: column;
+  }
+  .compare-scroll { overflow: auto; margin-top: 10px; }
+  .compare-table { border-collapse: collapse; width: 100%; font-size: 12px; }
+  .compare-table th, .compare-table td {
+    padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left;
+    vertical-align: top; white-space: nowrap;
+  }
+  .compare-table th:first-child, .compare-table td:first-child {
+    color: var(--muted); font-weight: 500; white-space: nowrap; position: sticky; left: 0;
+    background: var(--panel);
+  }
+  .compare-table th { color: var(--teal); font-weight: 600; }
+  .compare-table td.name-cell { white-space: normal; max-width: 160px; font-weight: 600; color: var(--text); }
+
+  .notice-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(5, 9, 18, 0.72);
+    backdrop-filter: blur(3px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .notice-overlay.hidden { display: none; }
+  .notice-modal {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    max-width: 440px;
+    width: 100%;
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 28px 26px 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .notice-close {
+    position: absolute; top: 14px; right: 14px;
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--panel-2);
+    color: var(--muted); font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .notice-close:hover { color: var(--text); }
+  .notice-title { font-size: 18px; font-weight: 700; margin: 0 0 6px; line-height: 1.35; }
+  .notice-sub { font-size: 13px; color: var(--muted); margin: 0 0 18px; line-height: 1.5; }
+  .notice-sub b { color: var(--gold); font-weight: 600; }
+
+  .notice-section { background: var(--panel-2); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; }
+  .notice-row { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; padding: 3px 0; }
+  .notice-label { color: var(--muted); }
+  .notice-value { color: var(--text); }
+  .notice-value b { color: var(--gold); }
+  .notice-heading { font-size: 12px; color: var(--teal); font-weight: 600; margin: 0 0 6px; }
+  .notice-list { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--text); line-height: 1.65; }
+  .notice-list li { margin-bottom: 2px; }
+  .notice-list b { color: var(--text); }
+
+  .notice-link {
+    display: block; text-align: center; font-size: 12.5px; color: var(--teal);
+    text-decoration: none; border: 1px solid rgba(45,212,191,0.35); border-radius: 8px;
+    padding: 9px; margin: 4px 0 16px;
+  }
+  .notice-link:hover { background: rgba(45,212,191,0.08); }
+
+  .notice-confirm {
+    width: 100%; background: var(--gold); color: #241a03; font-weight: 700;
+    font-size: 14px; border: none; border-radius: 9px; padding: 12px; cursor: pointer;
+  }
+  .notice-confirm:hover { filter: brightness(1.08); }
+
+  @media (max-width: 480px) { .notice-modal { padding: 24px 18px 20px; } }
+</style>
+</head>
+<body>
+
+<div class="notice-overlay" id="noticeOverlay">
+  <div class="notice-modal">
+    <button class="notice-close" id="noticeClose" aria-label="Close">✕</button>
+    <h2 class="notice-title" data-i18n="noticeTitle">이사했다면 꼭 확인하세요</h2>
+    <p class="notice-sub" data-i18n-html="noticeSub"><b>체류지(주소) 변경 신고</b>, 놓치면 과태료가 나올 수 있어요</p>
+
+    <div class="notice-section">
+      <div class="notice-row">
+        <span class="notice-label" data-i18n="noticeDeadlineLabel">⏰ 신고 기한</span>
+        <span class="notice-value" data-i18n-html="noticeDeadlineValue">전입일로부터 <b>15일 이내</b></span>
+      </div>
+      <div class="notice-row">
+        <span class="notice-label" data-i18n="noticeFineLabel">⚠️ 미신고 시</span>
+        <span class="notice-value" data-i18n-html="noticeFineValue">최대 <b>100만원 이하 과태료</b></span>
+      </div>
+    </div>
+
+    <div class="notice-section">
+      <p class="notice-heading" data-i18n="noticeHowHeading">신고 방법 (택 1)</p>
+      <ul class="notice-list">
+        <li data-i18n-html="noticeHowOnline"><b>온라인</b> — 정부24 또는 하이코리아(HiKorea) 웹사이트</li>
+        <li data-i18n-html="noticeHowVisit"><b>방문</b> — 새 주소지 관할 주민센터(행정복지센터) 또는 출입국·외국인사무소</li>
+      </ul>
+    </div>
+
+    <div class="notice-section">
+      <p class="notice-heading" data-i18n="noticeDocsHeading">준비 서류</p>
+      <ul class="notice-list">
+        <li data-i18n="noticeDocs1">외국인등록증, 여권</li>
+        <li data-i18n="noticeDocs2">거주지 입증 서류 (임대차계약서, 기숙사비 영수증, 숙소제공 확인서 등 중 1개)</li>
+      </ul>
+    </div>
+
+    <a class="notice-link" href="https://www.gov.kr/mw/AA020InfoCappView.do?CappBizCD=12700000026" target="_blank" rel="noopener" data-i18n="noticeLink">
+      정부24에서 신고 방법 자세히 보기 →
+    </a>
+
+    <button class="notice-confirm" id="noticeConfirm" data-i18n="noticeConfirm">확인했어요</button>
+  </div>
+</div>
+
+<header>
+  <div class="header-top-row">
+    <div>
+      <h1 data-i18n-html="headerTitle">🏠 <span>국민대학교</span> 근처 자취방 리스트</h1>
+      <p class="sub" data-i18n="headerSub">성북구·강북구 원룸텔·고시원·쉐어하우스 통합 · 편의점/카페/마트/병원/세탁소/우체국까지 확인</p>
+      <p class="collected-badge" data-i18n="collectedBadge">📅 2026년 8월 기준 수집된 정보</p>
+    </div>
+    <button class="filter-toggle" id="filterToggle">
+      <span data-i18n="filterToggleShow">🔍 필터</span>
+      <span class="chevron">▾</span>
+    </button>
+  </div>
+
+  <div class="filter-panel" id="filterPanel">
+    <div class="region-tabs" id="regionTabs"></div>
+    <div class="lang-switch" id="langSwitch">
+      <button class="lang-btn active" data-lang="ko">한국어</button>
+      <button class="lang-btn" data-lang="en">English</button>
+      <button class="lang-btn" data-lang="vi">Tiếng Việt</button>
+      <button class="lang-btn" data-lang="zh">中文</button>
+      <button class="lang-btn" data-lang="ru">Русский</button>
+      <button class="lang-btn" data-lang="my">မြန်မာ</button>
+      <button class="lang-btn" data-lang="mn">Монгол</button>
+    </div>
+    <div class="controls">
+      <input type="text" id="q" placeholder="이름, 동네로 검색" data-i18n-placeholder="searchPlaceholder">
+      <select id="typeFilter"></select>
+      <input type="number" id="maxRent" placeholder="최대 월세(만원)" data-i18n-placeholder="maxRentPlaceholder">
+      <select id="sort">
+        <option value="distance" data-i18n="sortDistance">학교와 가까운 순</option>
+        <option value="rentMin" data-i18n="sortRent">월세 낮은 순</option>
+        <option value="deposit" data-i18n="sortDeposit">보증금 낮은 순</option>
+      </select>
+    </div>
+    <div class="quick-row" id="priceChips"></div>
+    <div class="quick-row">
+      <div class="qchip fav" id="favChip" data-i18n="favChip">♥ 찜한 곳만</div>
+      <div class="qchip" id="bathChip" data-i18n="bathChip">🚽 개인화장실만</div>
+      <div class="qchip" id="acChip" data-i18n="acChip">❄️ 개인에어컨만</div>
+    </div>
+  </div>
+</header>
+
+<div class="stats" id="stats"></div>
+<div class="toolbar-row" id="toolbarRow">
+  <button class="tool-btn" id="shareBtn">🔗 <span data-i18n="shareBtn">필터 링크 공유</span></button>
+  <button class="tool-btn" id="compareBtn" style="display:none;">⚖️ <span data-i18n="compareBtn">찜한 곳 비교</span></button>
+</div>
+<div class="recent-strip" id="recentStrip" style="display:none;"></div>
+
+<main>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">
+    <span data-i18n="emptyText">조건에 맞는 매물이 없어요. 검색어나 필터를 조정해보세요.</span>
+    <br><button id="resetBtn" data-i18n="resetBtn">필터 초기화</button>
+  </div>
+  <div class="footnote-box">
+    <button class="footnote-toggle" id="footnoteToggle">
+      <span data-i18n="footnoteSummary">✅ 방 보러 갈 때 체크리스트</span>
+      <span class="chevron">▾</span>
+    </button>
+    <div class="footnote" id="footnoteText">
+      <ul class="checklist">
+        <li><span data-i18n-html="check1"><b>💧 수압</b> — 화장실·주방 수도꼭지, 샤워기 직접 틀어보기</span></li>
+        <li><span data-i18n-html="check2"><b>🔇 방음</b> — 옆방·복도 소음이 들리는지, 벽 두드려보기</span></li>
+        <li><span data-i18n-html="check3"><b>🦠 곰팡이·벌레</b> — 벽지 얼룩, 곰팡이 냄새, 창틀·화장실 구석 확인</span></li>
+        <li><span data-i18n-html="check4"><b>☀️ 채광·환기</b> — 창문 방향, 낮에 밝은지, 창문이 실제로 열리는지</span></li>
+        <li><span data-i18n-html="check5"><b>🔥 난방·단열</b> — 보일러 작동 확인, 창틀 틈새로 바람 들어오는지</span></li>
+        <li><span data-i18n-html="check6"><b>🔒 보안</b> — 현관문 잠금장치, 공동현관 출입 방식(카드/비밀번호)</span></li>
+        <li><span data-i18n-html="check7"><b>📶 인터넷</b> — 랜선 있는지, 통신사 별도 가입 필요한지</span></li>
+        <li><span data-i18n-html="check8"><b>🧾 관리비 포함 항목</b> — 수도·전기·인터넷이 관리비에 포함인지 정확히 확인</span></li>
+        <li><span data-i18n-html="check9"><b>🅿️ 주차</b> — 필요하면 가능 여부와 추가 비용 확인</span></li>
+        <li><span data-i18n-html="check10"><b>🚪 하자 여부</b> — 이전 세입자가 왜 나갔는지, 수리 이력 물어보기</span></li>
+      </ul>
+    </div>
+  </div>
+</main>
+
+<div class="compare-overlay hidden" id="compareOverlay">
+  <div class="compare-modal">
+    <button class="notice-close" id="compareClose" aria-label="Close">✕</button>
+    <h2 class="notice-title" data-i18n="compareTitle">찜한 곳 비교</h2>
+    <div class="compare-scroll">
+      <table class="compare-table" id="compareTable"></table>
+    </div>
+  </div>
+</div>
+
+<script>
+let DATA = [];
+let REGION_ORDER = [];
+
+// ---------------- 다국어(i18n) ----------------
+const I18N = {
+  ko: {
+    headerTitle: '🏠 <span>국민대학교</span> 근처 자취방 리스트',
+    headerSub: '성북구·강북구 원룸텔·고시원·쉐어하우스 통합 · 편의점/카페/마트/병원/세탁소/우체국까지 확인',
+    searchPlaceholder: '이름, 동네로 검색',
+    maxRentPlaceholder: '최대 월세(만원)',
+    typeFilterAll: '매물유형 전체',
+    sortDistance: '학교와 가까운 순',
+    sortRent: '월세 낮은 순',
+    sortDeposit: '보증금 낮은 순',
+    favChip: '♥ 찜한 곳만',
+    bathChip: '🚽 개인화장실만',
+    acChip: '❄️ 개인에어컨만',
+    priceBand0: '30만원 이하', priceBand1: '30~50만원', priceBand2: '50~70만원', priceBand3: '70만원 이상',
+    statCount: '매물 수', statOf: '전체', statMinRent: '최저 월세', statAvgRent: '평균 월세(최소가 기준)', statFav: '찜한 곳',
+    unitEon: '건', unitManwon: '만원',
+    distToCampus: '학교까지', distUnknown: '거리 미확인', distEstimated: ' (직선거리 추정)',
+    rentLabel: '월세', depositLabel: '보증금', maintenanceLabel: '관리비', inquireText: '문의 필요',
+    addressApprox: ' · 정확한 주소 비공개(동 중심 좌표 기준)',
+    amenityApproxNote: '· 편의시설 거리는 동 중심 좌표 기준 추정치',
+    viewGobang: '방 보기 →', viewKakao: '📍 도로 보기', favTitle: '찜하기',
+    amenityEmpty: (label) => `${label} 없음`,
+    amenity: { '🏪': '편의점', '☕': '카페', '🛒': '마트', '🏥': '병원', '🧺': '세탁소', '📮': '우체국' },
+    typeMap: {
+      '고시원': '고시원', '원룸텔': '원룸텔', '쉐어하우스': '쉐어하우스',
+      '원룸(분리형)': '원룸(분리형)', '원룸(오픈형)': '원룸(오픈형)', '투룸': '투룸',
+      '원룸텔(고시원)': '원룸텔(고시원)', '게스트하우스': '게스트하우스', '모텔': '모텔',
+      '빌라/다가구': '빌라/다가구', '아파트': '아파트',
+    },
+    emptyText: '조건에 맞는 매물이 없어요. 검색어나 필터를 조정해보세요.',
+    resetBtn: '필터 초기화',
+    filterToggleShow: '🔍 필터',
+    filterToggleHide: '✕ 필터 닫기',
+    footnoteSummary: '✅ 방 보러 갈 때 체크리스트',
+    collectedBadge: '📅 2026년 8월 기준 수집된 정보',
+    shareBtn: '필터 링크 공유', shareCopied: '링크를 복사했어요!',
+    compareBtn: '찜한 곳 비교', compareTitle: '찜한 곳 비교',
+    compareNeedMore: '2곳 이상 찜하면 비교표가 열려요',
+    recentLabel: '최근 본 매물',
+    rowName: '이름', rowType: '유형', rowRegion: '지역', rowDist: '학교까지', rowRent: '월세',
+    rowDeposit: '보증금', rowBath: '화장실', rowAc: '에어컨', rowSubway: '지하철역',
+    check1: '<b>💧 수압</b> — 화장실·주방 수도꼭지, 샤워기 직접 틀어보기',
+    check2: '<b>🔇 방음</b> — 옆방·복도 소음이 들리는지, 벽 두드려보기',
+    check3: '<b>🦠 곰팡이·벌레</b> — 벽지 얼룩, 곰팡이 냄새, 창틀·화장실 구석 확인',
+    check4: '<b>☀️ 채광·환기</b> — 창문 방향, 낮에 밝은지, 창문이 실제로 열리는지',
+    check5: '<b>🔥 난방·단열</b> — 보일러 작동 확인, 창틀 틈새로 바람 들어오는지',
+    check6: '<b>🔒 보안</b> — 현관문 잠금장치, 공동현관 출입 방식(카드/비밀번호)',
+    check7: '<b>📶 인터넷</b> — 랜선 있는지, 통신사 별도 가입 필요한지',
+    check8: '<b>🧾 관리비 포함 항목</b> — 수도·전기·인터넷이 관리비에 포함인지 정확히 확인',
+    check9: '<b>🅿️ 주차</b> — 필요하면 가능 여부와 추가 비용 확인',
+    check10: '<b>🚪 하자 여부</b> — 이전 세입자가 왜 나갔는지, 수리 이력 물어보기',
+    noticeTitle: '이사했다면 꼭 확인하세요',
+    noticeSub: '<b>체류지(주소) 변경 신고</b>, 놓치면 과태료가 나올 수 있어요',
+    noticeDeadlineLabel: '⏰ 신고 기한',
+    noticeDeadlineValue: '전입일로부터 <b>15일 이내</b>',
+    noticeFineLabel: '⚠️ 미신고 시',
+    noticeFineValue: '최대 <b>100만원 이하 과태료</b>',
+    noticeHowHeading: '신고 방법 (택 1)',
+    noticeHowOnline: '<b>온라인</b> — 정부24 또는 하이코리아(HiKorea) 웹사이트',
+    noticeHowVisit: '<b>방문</b> — 새 주소지 관할 주민센터(행정복지센터) 또는 출입국·외국인사무소',
+    noticeDocsHeading: '준비 서류',
+    noticeDocs1: '외국인등록증, 여권',
+    noticeDocs2: '거주지 입증 서류 (임대차계약서, 기숙사비 영수증, 숙소제공 확인서 등 중 1개)',
+    noticeLink: '정부24에서 신고 방법 자세히 보기 →',
+    noticeConfirm: '확인했어요',
+  },
+  en: {
+    headerTitle: '🏠 Housing Near <span>Kookmin University</span>',
+    headerSub: 'Studios, goshiwons & share houses in Seongbuk-gu & Gangbuk-gu — with nearby convenience stores, cafes, marts, hospitals, laundromats & post offices',
+    searchPlaceholder: 'Search by name or neighborhood',
+    maxRentPlaceholder: 'Max rent (10K KRW)',
+    typeFilterAll: 'All types',
+    sortDistance: 'Closest to campus',
+    sortRent: 'Lowest rent',
+    sortDeposit: 'Lowest deposit',
+    favChip: '♥ Favorites only',
+    bathChip: '🚽 Private bathroom only',
+    acChip: '❄️ Private AC only',
+    priceBand0: 'Under 300K', priceBand1: '300K–500K', priceBand2: '500K–700K', priceBand3: 'Over 700K',
+    statCount: 'Listings', statOf: 'of', statMinRent: 'Lowest rent', statAvgRent: 'Avg. rent (min price)', statFav: 'Favorites',
+    unitEon: '', unitManwon: '10K KRW',
+    distToCampus: 'to campus', distUnknown: 'Distance unknown', distEstimated: ' (straight-line est.)',
+    rentLabel: 'Rent', depositLabel: 'Deposit', maintenanceLabel: 'Maintenance', inquireText: 'Inquire',
+    addressApprox: ' · Exact address hidden (neighborhood-center coordinates)',
+    amenityApproxNote: '· Amenity distances are estimated from neighborhood-center coordinates',
+    viewGobang: 'View room →', viewKakao: '📍 Street view', favTitle: 'Add to favorites',
+    amenityEmpty: (label) => `No ${label.toLowerCase()} nearby`,
+    amenity: { '🏪': 'Convenience store', '☕': 'Cafe', '🛒': 'Mart', '🏥': 'Hospital', '🧺': 'Laundromat', '📮': 'Post office' },
+    typeMap: {
+      '고시원': 'Goshiwon', '원룸텔': 'Studio (wonroomtel)', '쉐어하우스': 'Share house',
+      '원룸(분리형)': 'Studio (separate)', '원룸(오픈형)': 'Studio (open-plan)', '투룸': 'Two-room',
+      '원룸텔(고시원)': 'Studio/Goshiwon', '게스트하우스': 'Guesthouse', '모텔': 'Motel',
+      '빌라/다가구': 'Villa/multi-family', '아파트': 'Apartment',
+    },
+    emptyText: 'No listings match your filters. Try adjusting your search.',
+    resetBtn: 'Reset filters',
+    filterToggleShow: '🔍 Filters',
+    filterToggleHide: '✕ Close filters',
+    footnoteSummary: '✅ Checklist for viewing a room',
+    collectedBadge: '📅 Data collected as of Aug 2026',
+    shareBtn: 'Share filtered link', shareCopied: 'Link copied!',
+    compareBtn: 'Compare favorites', compareTitle: 'Compare favorites',
+    compareNeedMore: 'Favorite 2+ listings to open the comparison table',
+    recentLabel: 'Recently viewed',
+    rowName: 'Name', rowType: 'Type', rowRegion: 'Region', rowDist: 'To campus', rowRent: 'Rent',
+    rowDeposit: 'Deposit', rowBath: 'Bathroom', rowAc: 'AC', rowSubway: 'Subway',
+    check1: '<b>💧 Water pressure</b> — Turn on the bathroom & kitchen taps and shower yourself',
+    check2: '<b>🔇 Soundproofing</b> — Listen for noise from next door/the hallway, knock on the wall',
+    check3: '<b>🦠 Mold & pests</b> — Check wallpaper stains, musty smell, window frames, bathroom corners',
+    check4: '<b>☀️ Light & ventilation</b> — Which way windows face, is it bright in daytime, do windows actually open',
+    check5: '<b>🔥 Heating & insulation</b> — Test the boiler, check for drafts around window frames',
+    check6: '<b>🔒 Security</b> — Front door lock, building entrance access (card/passcode)',
+    check7: '<b>📶 Internet</b> — Is there an ethernet port, do you need a separate ISP contract',
+    check8: '<b>🧾 What\'s included in maintenance fee</b> — Confirm exactly whether water/electricity/internet are included',
+    check9: '<b>🅿️ Parking</b> — If you need it, check availability and extra cost',
+    check10: '<b>🚪 Any issues</b> — Ask why the previous tenant left and about repair history',
+    noticeTitle: 'Just moved in? Check this first',
+    noticeSub: 'You may need to file a <b>change of residence report</b> — missing it can mean a fine',
+    noticeDeadlineLabel: '⏰ Deadline',
+    noticeDeadlineValue: 'Within <b>15 days</b> of moving in',
+    noticeFineLabel: '⚠️ If not reported',
+    noticeFineValue: 'Fine of up to <b>₩1,000,000</b>',
+    noticeHowHeading: 'How to report (pick one)',
+    noticeHowOnline: '<b>Online</b> — via Gov24 or HiKorea website',
+    noticeHowVisit: '<b>In person</b> — your new address\'s community service center (dong office) or immigration office',
+    noticeDocsHeading: 'Documents to prepare',
+    noticeDocs1: 'Alien Registration Card, passport',
+    noticeDocs2: 'Proof of residence (lease agreement, dorm fee receipt, housing confirmation letter, etc. — any one)',
+    noticeLink: 'See details on Gov24 →',
+    noticeConfirm: 'Got it',
+  },
+  vi: {
+    headerTitle: '🏠 Nhà trọ gần <span>Đại học Kookmin</span>',
+    headerSub: 'Phòng trọ, goshiwon, share house ở Seongbuk-gu & Gangbuk-gu — kèm cửa hàng tiện lợi, quán cà phê, siêu thị, bệnh viện, tiệm giặt ủi & bưu điện gần đó',
+    searchPlaceholder: 'Tìm theo tên hoặc khu vực',
+    maxRentPlaceholder: 'Tiền thuê tối đa (đơn vị 10K KRW)',
+    typeFilterAll: 'Tất cả loại hình',
+    sortDistance: 'Gần trường nhất',
+    sortRent: 'Tiền thuê thấp nhất',
+    sortDeposit: 'Tiền cọc thấp nhất',
+    favChip: '♥ Chỉ mục yêu thích',
+    bathChip: '🚽 Chỉ nhà vệ sinh riêng',
+    acChip: '❄️ Chỉ máy lạnh riêng',
+    priceBand0: 'Dưới 300K', priceBand1: '300K–500K', priceBand2: '500K–700K', priceBand3: 'Trên 700K',
+    statCount: 'Số phòng', statOf: 'trong', statMinRent: 'Giá thuê thấp nhất', statAvgRent: 'Giá thuê TB (giá tối thiểu)', statFav: 'Yêu thích',
+    unitEon: '', unitManwon: '10K KRW',
+    distToCampus: 'đến trường', distUnknown: 'Chưa rõ khoảng cách', distEstimated: ' (ước tính đường thẳng)',
+    rentLabel: 'Tiền thuê', depositLabel: 'Tiền cọc', maintenanceLabel: 'Phí quản lý', inquireText: 'Liên hệ',
+    addressApprox: ' · Địa chỉ chính xác không công khai (tọa độ trung tâm phường)',
+    amenityApproxNote: '· Khoảng cách tiện ích là ước tính từ tọa độ trung tâm phường',
+    viewGobang: 'Xem phòng →', viewKakao: '📍 Xem đường phố', favTitle: 'Thêm vào yêu thích',
+    amenityEmpty: (label) => `Không có ${label.toLowerCase()} gần đây`,
+    amenity: { '🏪': 'Cửa hàng tiện lợi', '☕': 'Quán cà phê', '🛒': 'Siêu thị', '🏥': 'Bệnh viện', '🧺': 'Tiệm giặt ủi', '📮': 'Bưu điện' },
+    typeMap: {
+      '고시원': 'Goshiwon', '원룸텔': 'Phòng studio (wonroomtel)', '쉐어하우스': 'Share house',
+      '원룸(분리형)': 'Studio (tách biệt)', '원룸(오픈형)': 'Studio (mở)', '투룸': 'Căn 2 phòng',
+      '원룸텔(고시원)': 'Studio/Goshiwon', '게스트하우스': 'Guesthouse', '모텔': 'Motel',
+      '빌라/다가구': 'Villa/nhà nhiều hộ', '아파트': 'Chung cư',
+    },
+    emptyText: 'Không có phòng nào phù hợp bộ lọc. Hãy thử điều chỉnh tìm kiếm.',
+    resetBtn: 'Đặt lại bộ lọc',
+    filterToggleShow: '🔍 Bộ lọc',
+    filterToggleHide: '✕ Đóng bộ lọc',
+    footnoteSummary: '✅ Checklist khi xem phòng trực tiếp',
+    collectedBadge: '📅 Dữ liệu thu thập tính đến tháng 8/2026',
+    shareBtn: 'Chia sẻ liên kết đã lọc', shareCopied: 'Đã sao chép liên kết!',
+    compareBtn: 'So sánh mục yêu thích', compareTitle: 'So sánh mục yêu thích',
+    compareNeedMore: 'Yêu thích từ 2 phòng trở lên để mở bảng so sánh',
+    recentLabel: 'Đã xem gần đây',
+    rowName: 'Tên', rowType: 'Loại hình', rowRegion: 'Khu vực', rowDist: 'Đến trường', rowRent: 'Tiền thuê',
+    rowDeposit: 'Tiền cọc', rowBath: 'Nhà vệ sinh', rowAc: 'Máy lạnh', rowSubway: 'Ga tàu điện',
+    check1: '<b>💧 Áp lực nước</b> — Tự tay mở vòi nước nhà tắm, nhà bếp và vòi hoa sen',
+    check2: '<b>🔇 Cách âm</b> — Nghe xem có tiếng ồn từ phòng bên/hành lang, gõ thử vào tường',
+    check3: '<b>🦠 Nấm mốc, côn trùng</b> — Kiểm tra vết ố trên giấy dán tường, mùi ẩm mốc, khung cửa sổ, góc nhà tắm',
+    check4: '<b>☀️ Ánh sáng & thông gió</b> — Hướng cửa sổ, ban ngày có sáng không, cửa sổ có mở được thật không',
+    check5: '<b>🔥 Sưởi ấm & cách nhiệt</b> — Thử vận hành lò sưởi (boiler), kiểm tra gió lùa quanh khung cửa sổ',
+    check6: '<b>🔒 An ninh</b> — Khóa cửa chính, cách vào tòa nhà (thẻ/mã số)',
+    check7: '<b>📶 Internet</b> — Có cổng mạng LAN không, có cần tự ký hợp đồng nhà mạng riêng không',
+    check8: '<b>🧾 Phí quản lý bao gồm gì</b> — Xác nhận rõ nước/điện/internet có nằm trong phí quản lý không',
+    check9: '<b>🅿️ Chỗ đậu xe</b> — Nếu cần, kiểm tra có chỗ đậu không và phí phát sinh',
+    check10: '<b>🚪 Tình trạng hư hỏng</b> — Hỏi lý do người thuê trước chuyển đi và lịch sử sửa chữa',
+    noticeTitle: 'Vừa chuyển nhà? Hãy kiểm tra điều này trước',
+    noticeSub: 'Bạn có thể cần khai báo <b>thay đổi nơi cư trú</b> — nếu bỏ lỡ có thể bị phạt tiền',
+    noticeDeadlineLabel: '⏰ Thời hạn',
+    noticeDeadlineValue: 'Trong vòng <b>15 ngày</b> kể từ khi chuyển đến',
+    noticeFineLabel: '⚠️ Nếu không khai báo',
+    noticeFineValue: 'Phạt tiền lên đến <b>1.000.000 KRW</b>',
+    noticeHowHeading: 'Cách khai báo (chọn 1)',
+    noticeHowOnline: '<b>Trực tuyến</b> — qua trang web Gov24 hoặc HiKorea',
+    noticeHowVisit: '<b>Trực tiếp</b> — trung tâm hành chính phường (dong office) nơi ở mới hoặc văn phòng xuất nhập cảnh',
+    noticeDocsHeading: 'Giấy tờ cần chuẩn bị',
+    noticeDocs1: 'Thẻ đăng ký người nước ngoài, hộ chiếu',
+    noticeDocs2: 'Giấy tờ chứng minh nơi cư trú (hợp đồng thuê nhà, biên lai phí ký túc xá, giấy xác nhận chỗ ở, v.v. — chọn 1 loại)',
+    noticeLink: 'Xem chi tiết trên Gov24 →',
+    noticeConfirm: 'Đã hiểu',
+  },
+  zh: {
+    headerTitle: '🏠 <span>国民大学</span>附近的住宿列表',
+    headerSub: '整合首尔城北区·江北区的原룸텔/考试院/合租房信息 · 附近便利店/咖啡厅/超市/医院/洗衣店/邮局信息',
+    searchPlaceholder: '搜索名称或地区',
+    maxRentPlaceholder: '最高月租(单位:万韩元)',
+    typeFilterAll: '全部类型',
+    sortDistance: '离学校最近',
+    sortRent: '月租最低',
+    sortDeposit: '押金最低',
+    favChip: '♥ 只看收藏',
+    bathChip: '🚽 只看独立卫生间',
+    acChip: '❄️ 只看独立空调',
+    priceBand0: '30万韩元以下', priceBand1: '30~50万韩元', priceBand2: '50~70万韩元', priceBand3: '70万韩元以上',
+    statCount: '房源数', statOf: '共', statMinRent: '最低月租', statAvgRent: '平均月租(按最低价)', statFav: '收藏',
+    unitEon: '', unitManwon: '万韩元',
+    distToCampus: '距学校', distUnknown: '距离未知', distEstimated: '(直线距离估算)',
+    rentLabel: '月租', depositLabel: '押金', maintenanceLabel: '管理费', inquireText: '需咨询',
+    addressApprox: ' · 未公开具体地址(以洞中心坐标为准)',
+    amenityApproxNote: '· 周边设施距离为洞中心坐标估算值',
+    viewGobang: '查看房源 →', viewKakao: '📍 街景', favTitle: '加入收藏',
+    amenityEmpty: (label) => `附近没有${label}`,
+    amenity: { '🏪': '便利店', '☕': '咖啡厅', '🛒': '超市', '🏥': '医院', '🧺': '洗衣店', '📮': '邮局' },
+    typeMap: {
+      '고시원': '考试院', '원룸텔': '原룸텔(单间旅馆)', '쉐어하우스': '合租房',
+      '원룸(분리형)': '单间(分离型)', '원룸(오픈형)': '单间(开放式)', '투룸': '两居室',
+      '원룸텔(고시원)': '原룸텔/考试院', '게스트하우스': '民宿', '모텔': '汽车旅馆',
+      '빌라/다가구': '别墅/多户住宅', '아파트': '公寓',
+    },
+    emptyText: '没有符合条件的房源。请调整搜索或筛选条件试试。',
+    resetBtn: '重置筛选',
+    filterToggleShow: '🔍 筛选',
+    filterToggleHide: '✕ 关闭筛选',
+    footnoteSummary: '✅ 看房时的确认清单',
+    collectedBadge: '📅 数据截至2026年8月收集',
+    shareBtn: '分享筛选链接', shareCopied: '链接已复制！',
+    compareBtn: '收藏对比', compareTitle: '收藏房源对比',
+    compareNeedMore: '收藏2个以上房源即可打开对比表',
+    recentLabel: '最近查看',
+    rowName: '名称', rowType: '类型', rowRegion: '地区', rowDist: '距学校', rowRent: '月租',
+    rowDeposit: '押金', rowBath: '卫生间', rowAc: '空调', rowSubway: '地铁站',
+    check1: '<b>💧 水压</b> — 亲自打开卫生间·厨房水龙头和淋浴喷头试一下',
+    check2: '<b>🔇 隔音</b> — 听听是否能听到隔壁房间、走廊的声音，敲敲墙壁试试',
+    check3: '<b>🦠 霉菌·虫害</b> — 检查墙纸污渍、霉味，窗框、卫生间角落',
+    check4: '<b>☀️ 采光·通风</b> — 窗户朝向，白天是否明亮，窗户是否真的能打开',
+    check5: '<b>🔥 供暖·保温</b> — 测试锅炉(暖气)是否正常运作，窗框缝隙是否漏风',
+    check6: '<b>🔒 安保</b> — 玄关门锁具，公共门禁方式(门禁卡/密码)',
+    check7: '<b>📶 网络</b> — 是否有网线接口，是否需要另外签约网络运营商',
+    check8: '<b>🧾 管理费包含项目</b> — 确认水电费、网络费是否包含在管理费内',
+    check9: '<b>🅿️ 停车</b> — 如有需要，确认是否可以停车及额外费用',
+    check10: '<b>🚪 房屋缺陷</b> — 询问上一位租客搬走的原因及维修记录',
+    noticeTitle: '刚搬家吗？请先确认这个',
+    noticeSub: '您可能需要办理<b>居留地(地址)变更申报</b> — 逾期未报可能被处以罚款',
+    noticeDeadlineLabel: '⏰ 申报期限',
+    noticeDeadlineValue: '搬入之日起<b>15日内</b>',
+    noticeFineLabel: '⚠️ 未申报时',
+    noticeFineValue: '最高可处<b>100万韩元</b>以下罚款',
+    noticeHowHeading: '申报方式(二选一)',
+    noticeHowOnline: '<b>线上</b> — 通过政府24(Gov24)或HiKorea网站',
+    noticeHowVisit: '<b>线下</b> — 前往新住址所属的居民中心(行政福利中心)或出入境·外国人事务所',
+    noticeDocsHeading: '所需材料',
+    noticeDocs1: '外国人登录证、护照',
+    noticeDocs2: '居住证明文件(租赁合同、宿舍费收据、住宿提供确认书等其中一种)',
+    noticeLink: '在政府24查看详细申报方法 →',
+    noticeConfirm: '知道了',
+  },
+  ru: {
+    headerTitle: '🏠 Жильё рядом с <span>Университетом Кукмин</span>',
+    headerSub: 'Студии, гошивоны и шер-хаусы в районах Сонбук-гу и Канбук-гу — с ближайшими магазинами, кафе, супермаркетами, больницами, прачечными и почтой',
+    searchPlaceholder: 'Поиск по названию или району',
+    maxRentPlaceholder: 'Макс. аренда (10 тыс. вон)',
+    typeFilterAll: 'Все типы',
+    sortDistance: 'Ближе к университету',
+    sortRent: 'Дешевле аренда',
+    sortDeposit: 'Меньше залог',
+    favChip: '♥ Только избранное',
+    bathChip: '🚽 Только своя ванная',
+    acChip: '❄️ Только свой кондиционер',
+    priceBand0: 'До 300K', priceBand1: '300K–500K', priceBand2: '500K–700K', priceBand3: 'Более 700K',
+    statCount: 'Объявлений', statOf: 'из', statMinRent: 'Мин. аренда', statAvgRent: 'Средняя аренда (по мин. цене)', statFav: 'Избранное',
+    unitEon: '', unitManwon: '10 тыс. вон',
+    distToCampus: 'до университета', distUnknown: 'Расстояние неизвестно', distEstimated: ' (по прямой, оценка)',
+    rentLabel: 'Аренда', depositLabel: 'Залог', maintenanceLabel: 'Обслуживание', inquireText: 'Уточняйте',
+    addressApprox: ' · Точный адрес скрыт (координаты центра квартала)',
+    amenityApproxNote: '· Расстояния до объектов — оценка по центру квартала',
+    viewGobang: 'Смотреть комнату →', viewKakao: '📍 Панорама улиц', favTitle: 'В избранное',
+    amenityEmpty: (label) => `Нет ${label.toLowerCase()} поблизости`,
+    amenity: { '🏪': 'Магазин у дома', '☕': 'Кафе', '🛒': 'Супермаркет', '🏥': 'Больница', '🧺': 'Прачечная', '📮': 'Почта' },
+    typeMap: {
+      '고시원': 'Гошивон', '원룸텔': 'Студия (вонрумтель)', '쉐어하우스': 'Шер-хаус',
+      '원룸(분리형)': 'Студия (раздельная)', '원룸(오픈형)': 'Студия (открытая)', '투룸': 'Двухкомнатная',
+      '원룸텔(고시원)': 'Студия/Гошивон', '게스트하우스': 'Гестхаус', '모텔': 'Мотель',
+      '빌라/다가구': 'Вилла/многоквартирный дом', '아파트': 'Квартира',
+    },
+    emptyText: 'Нет объявлений по вашим фильтрам. Попробуйте изменить поиск.',
+    resetBtn: 'Сбросить фильтры',
+    filterToggleShow: '🔍 Фильтры',
+    filterToggleHide: '✕ Закрыть фильтры',
+    footnoteSummary: '✅ Что проверить при осмотре комнаты',
+    collectedBadge: '📅 Данные собраны по состоянию на август 2026',
+    shareBtn: 'Поделиться ссылкой с фильтром', shareCopied: 'Ссылка скопирована!',
+    compareBtn: 'Сравнить избранное', compareTitle: 'Сравнение избранного',
+    compareNeedMore: 'Добавьте 2+ объявления в избранное, чтобы открыть сравнение',
+    recentLabel: 'Недавно просмотренные',
+    rowName: 'Название', rowType: 'Тип', rowRegion: 'Район', rowDist: 'До университета', rowRent: 'Аренда',
+    rowDeposit: 'Залог', rowBath: 'Ванная', rowAc: 'Кондиционер', rowSubway: 'Метро',
+    check1: '<b>💧 Напор воды</b> — Включите краны в ванной, на кухне и душ лично',
+    check2: '<b>🔇 Звукоизоляция</b> — Прислушайтесь к шуму из соседней комнаты/коридора, постучите по стене',
+    check3: '<b>🦠 Плесень и насекомые</b> — Проверьте пятна на обоях, запах сырости, оконные рамы, углы ванной',
+    check4: '<b>☀️ Освещение и вентиляция</b> — Сторона окон, светло ли днём, реально ли открываются окна',
+    check5: '<b>🔥 Отопление и утепление</b> — Проверьте работу котла, сквозняки у оконных рам',
+    check6: '<b>🔒 Безопасность</b> — Замок входной двери, способ входа в здание (карта/код)',
+    check7: '<b>📶 Интернет</b> — Есть ли LAN-порт, нужен ли отдельный договор с провайдером',
+    check8: '<b>🧾 Что входит в плату за обслуживание</b> — Уточните, включены ли вода/электричество/интернет',
+    check9: '<b>🅿️ Парковка</b> — Если нужна, уточните наличие и доплату',
+    check10: '<b>🚪 Есть ли недостатки</b> — Спросите, почему съехал прошлый жилец, и историю ремонта',
+    noticeTitle: 'Только что переехали? Сначала проверьте это',
+    noticeSub: 'Возможно, нужно подать <b>заявление об изменении места жительства</b> — иначе может быть штраф',
+    noticeDeadlineLabel: '⏰ Срок подачи',
+    noticeDeadlineValue: 'В течение <b>15 дней</b> с момента переезда',
+    noticeFineLabel: '⚠️ Если не подать',
+    noticeFineValue: 'Штраф до <b>1 000 000 вон</b>',
+    noticeHowHeading: 'Как подать (один способ)',
+    noticeHowOnline: '<b>Онлайн</b> — через сайт Gov24 или HiKorea',
+    noticeHowVisit: '<b>Лично</b> — в центр обслуживания района (dong office) по новому адресу или в иммиграционный офис',
+    noticeDocsHeading: 'Необходимые документы',
+    noticeDocs1: 'Карта иностранца (ARC), паспорт',
+    noticeDocs2: 'Подтверждение проживания (договор аренды, квитанция за общежитие, справка о предоставлении жилья и т.п. — один документ)',
+    noticeLink: 'Подробнее на Gov24 →',
+    noticeConfirm: 'Понятно',
+  },
+  my: {
+    headerTitle: '🏠 <span>Kookmin တက္ကသိုလ်</span> အနီးရှိ အိမ်ငှားစာရင်း',
+    headerSub: 'Seongbuk-gu နှင့် Gangbuk-gu ရှိ studio၊ goshiwon နှင့် share house များ — အနီးရှိ convenience store၊ ကော်ဖီဆိုင်၊ စူပါမားကတ်၊ ဆေးရုံ၊ အဝတ်လျှော်ဆိုင်၊ စာတိုက်များနှင့်အတူ',
+    searchPlaceholder: 'အမည် သို့မဟုတ် ရပ်ကွက်ဖြင့် ရှာပါ',
+    maxRentPlaceholder: 'အများဆုံးငှားရမ်းခ (၁သောင်း ဝမ်)',
+    typeFilterAll: 'အမျိုးအစားအားလုံး',
+    sortDistance: 'ကျောင်းနှင့်အနီးဆုံး',
+    sortRent: 'အငှားခ အနည်းဆုံး',
+    sortDeposit: 'အပေါင်ငွေ အနည်းဆုံး',
+    favChip: '♥ နှစ်သက်ရာများသာ',
+    bathChip: '🚽 သီးသန့်ရေချိုးခန်းသာ',
+    acChip: '❄️ သီးသန့်အဲကွန်းသာ',
+    priceBand0: '၃၀သောင်းအောက်', priceBand1: '၃၀-၅၀သောင်း', priceBand2: '၅၀-၇၀သောင်း', priceBand3: '၇၀သောင်းအထက်',
+    statCount: 'အခန်းစုစုပေါင်း', statOf: '/', statMinRent: 'အနည်းဆုံးအငှားခ', statAvgRent: 'ပျမ်းမျှအငှားခ(အနည်းဆုံးဈေးနှုန်း)', statFav: 'နှစ်သက်ရာများ',
+    unitEon: 'ခန်း', unitManwon: '၁သောင်းဝမ်',
+    distToCampus: 'ကျောင်းအထိ', distUnknown: 'အကွာအဝေးမသိရ', distEstimated: ' (တိုက်ရိုက်အကွာအဝေးခန့်မှန်း)',
+    rentLabel: 'အငှားခ', depositLabel: 'အပေါင်ငွေ', maintenanceLabel: 'စီမံခန့်ခွဲမှုကြေး', inquireText: 'မေးမြန်းပါ',
+    addressApprox: ' · တိကျသောလိပ်စာမပေါ်ပါ (ရပ်ကွက်ဗဟိုကိုသုံး၍တွက်ချက်)',
+    amenityApproxNote: '· ပတ်ဝန်းကျင်အကွာအဝေးများသည် ရပ်ကွက်ဗဟိုအညွှန်းကိုအခြေခံ၍ခန့်မှန်းထားခြင်းဖြစ်သည်',
+    viewGobang: 'အခန်းကြည့်ရန် →', viewKakao: '📍 လမ်းကြည့်ရှုမှု', favTitle: 'နှစ်သက်ရာထဲထည့်ရန်',
+    amenityEmpty: (label) => `အနီးတွင် ${label} မရှိပါ`,
+    amenity: { '🏪': 'အထွေထွေဆိုင်', '☕': 'ကော်ဖီဆိုင်', '🛒': 'စူပါမားကတ်', '🏥': 'ဆေးရုံ', '🧺': 'အဝတ်လျှော်ဆိုင်', '📮': 'စာတိုက်' },
+    typeMap: {
+      '고시원': 'Goshiwon', '원룸텔': 'Studio (wonroomtel)', '쉐어하우스': 'Share house',
+      '원룸(분리형)': 'Studio (ခွဲထားသော)', '원룸(오픈형)': 'Studio (ဖွင့်ထားသော)', '투룸': 'အခန်းနှစ်ခန်း',
+      '원룸텔(고시원)': 'Studio/Goshiwon', '게스트하우스': 'Guesthouse', '모텔': 'Motel',
+      '빌라/다가구': 'Villa/မိသားစုများစွာနေအိမ်', '아파트': 'တိုက်ခန်း',
+    },
+    emptyText: 'သင့်စစ်ထုတ်မှုနှင့်ကိုက်ညီသော အခန်းမရှိပါ။ ရှာဖွေမှုကို ချိန်ညှိကြည့်ပါ။',
+    resetBtn: 'စစ်ထုတ်မှုများ ပြန်လည်သတ်မှတ်ရန်',
+    filterToggleShow: '🔍 စစ်ထုတ်မှုများ',
+    filterToggleHide: '✕ စစ်ထုတ်မှုပိတ်ရန်',
+    footnoteSummary: '✅ အခန်းကြည့်ရန်စစ်ဆေးရမည့်စာရင်း',
+    collectedBadge: '📅 ၂၀၂၆ ခုနှစ် ဩဂုတ်လအထိ စုဆောင်းထားသောအချက်အလက်',
+    shareBtn: 'စစ်ထုတ်ထားသောလင့်ခ်ကို မျှဝေရန်', shareCopied: 'လင့်ခ်ကို ကူးယူပြီးပါပြီ!',
+    compareBtn: 'နှစ်သက်ရာများ နှိုင်းယှဉ်ရန်', compareTitle: 'နှစ်သက်ရာများ နှိုင်းယှဉ်ခြင်း',
+    compareNeedMore: 'နှိုင်းယှဉ်ဇယားဖွင့်ရန် အနည်းဆုံး ၂ခု နှစ်သက်ရာထဲထည့်ပါ',
+    recentLabel: 'မကြာသေးမီကကြည့်ခဲ့သော',
+    rowName: 'အမည်', rowType: 'အမျိုးအစား', rowRegion: 'ဒေသ', rowDist: 'ကျောင်းအထိ', rowRent: 'အငှားခ',
+    rowDeposit: 'အပေါင်ငွေ', rowBath: 'ရေချိုးခန်း', rowAc: 'အဲကွန်း', rowSubway: 'မြေအောက်ရထား',
+    check1: '<b>💧 ရေဖိအား</b> — ရေချိုးခန်း၊ မီးဖိုချောင်ရေပိုက်နှင့် ရေပန်းကို ကိုယ်တိုင်ဖွင့်ကြည့်ပါ',
+    check2: '<b>🔇 အသံလုံခြုံမှု</b> — အနီးအခန်း/စကားလမ်းမှ ဆူညံသံကြားရမရ၊ နံရံကိုခေါက်ကြည့်ပါ',
+    check3: '<b>🦠 မှိုနှင့်ပိုးမွှား</b> — နံရံစက္ကူအမှတ်၊ စိုထိုင်းနံ့၊ ပြတင်းပေါက်ဘောင်၊ ရေချိုးခန်းထောင့်များကိုစစ်ဆေးပါ',
+    check4: '<b>☀️ အလင်းရောင်နှင့်လေဝင်လေထွက်</b> — ပြတင်းပေါက်မျက်နှာမူရာ၊ နေ့ဘက်တွင်လင်းမလင်း၊ ပြတင်းပေါက်အမှန်ဖွင့်ရမရ',
+    check5: '<b>🔥 အပူပေးစနစ်နှင့်အပူလုံခြုံမှု</b> — boiler အလုပ်လုပ်မလုပ်စစ်ပါ၊ ပြတင်းပေါက်ဘောင်မှလေဝင်မရှိမရှိ',
+    check6: '<b>🔒 လုံခြုံရေး</b> — အဝင်တံခါးသော့၊ အဆောက်အအုံဝင်ပေါက်စနစ်(ကတ်/စကားဝှက်)',
+    check7: '<b>📶 အင်တာနက်</b> — LAN port ရှိမရှိ၊ သီးသန့် ISP စာချုပ်လိုအပ်မလို',
+    check8: '<b>🧾 စီမံခန့်ခွဲမှုကြေးတွင်ပါဝင်သောအရာများ</b> — ရေ/မီး/အင်တာနက်တို့ ပါဝင်မပါဝင် သေချာစစ်ဆေးပါ',
+    check9: '<b>🅿️ ကားပါကင်</b> — လိုအပ်ပါက ရနိုင်မှုနှင့်ထပ်ဆောင်းကုန်ကျစရိတ်ကိုစစ်ဆေးပါ',
+    check10: '<b>🚪 ချို့ယွင်းချက်ရှိမရှိ</b> — ယခင်အိမ်ငှားအဘယ်ကြောင့်ထွက်သွားသည်၊ ပြင်ဆင်မှုမှတ်တမ်းကို မေးပါ',
+    noticeTitle: 'ဖော်ပြထားသောနေရာသို့ ပြောင်းရွှေ့ပြီးပါပြီလား？ ဒါကို အရင်စစ်ဆေးပါ',
+    noticeSub: '<b>နေထိုင်ရာလိပ်စာပြောင်းလဲကြောင်း အစီရင်ခံစာ</b> တင်ရန်လိုအပ်ပေမည် — လွတ်သွားပါက ဒဏ်ငွေကျနိုင်သည်',
+    noticeDeadlineLabel: '⏰ နောက်ဆုံးရက်',
+    noticeDeadlineValue: 'ပြောင်းရွှေ့သည့်နေ့မှ <b>ရက်၁၅ရက်အတွင်း</b>',
+    noticeFineLabel: '⚠️ အစီရင်မခံပါက',
+    noticeFineValue: 'ဒဏ်ငွေ <b>ဝမ် ၁,၀၀၀,၀၀၀</b> အထိကျနိုင်သည်',
+    noticeHowHeading: 'အစီရင်ခံပုံ (တစ်ခုရွေးပါ)',
+    noticeHowOnline: '<b>အွန်လိုင်း</b> — Gov24 သို့မဟုတ် HiKorea ဝက်ဘ်ဆိုက်မှတစ်ဆင့်',
+    noticeHowVisit: '<b>လူကိုယ်တိုင်</b> — နေရပ်သစ်ရှိ ရပ်ကွက်အုပ်ချုပ်ရေးရုံး(dong office) သို့မဟုတ် လူဝင်မှုကြီးကြပ်ရေးရုံးသို့',
+    noticeDocsHeading: 'ပြင်ဆင်ထားရမည့်စာရွက်စာတမ်းများ',
+    noticeDocs1: 'နိုင်ငံခြားသားမှတ်ပုံတင်ကတ်၊ နိုင်ငံကူးလက်မှတ်',
+    noticeDocs2: 'နေထိုင်ရာအထောက်အထား(အိမ်ငှားစာချုပ်၊ ဆောင်းပါးခကုန်ကျစာရင်း၊ နေအိမ်ပေးအပ်ကြောင်းအထောက်အထားစသည်တို့မှတစ်ခု)',
+    noticeLink: 'Gov24 တွင် အသေးစိတ်ကြည့်ရန် →',
+    noticeConfirm: 'နားလည်ပါပြီ',
+  },
+  mn: {
+    headerTitle: '🏠 <span>Күүкмин Их Сургууль</span>-ийн ойролцоох байрны жагсаалт',
+    headerSub: 'Сонбук, Ганбук дүүргийн студи, гошивон, шэйр хаусууд — ойролцоох дэлгүүр, кафе, супермаркет, эмнэлэг, угаалгын газар, шуудангийн газартай хамт',
+    searchPlaceholder: 'Нэр эсвэл хорооллоор хайх',
+    maxRentPlaceholder: 'Дээд түрээс (10мянган вон)',
+    typeFilterAll: 'Бүх төрөл',
+    sortDistance: 'Сургуультай хамгийн ойр',
+    sortRent: 'Түрээс хамгийн бага',
+    sortDeposit: 'Барьцаа хамгийн бага',
+    favChip: '♥ Зөвхөн хадгалсан',
+    bathChip: '🚽 Зөвхөн тусдаа угаалгын өрөөтэй',
+    acChip: '❄️ Зөвхөн тусдаа кондиционертой',
+    priceBand0: '300K хүртэл', priceBand1: '300K–500K', priceBand2: '500K–700K', priceBand3: '700K-с дээш',
+    statCount: 'Байрны тоо', statOf: 'нийт', statMinRent: 'Хамгийн бага түрээс', statAvgRent: 'Дундаж түрээс (доод үнээр)', statFav: 'Хадгалсан',
+    unitEon: '', unitManwon: '10мянган вон',
+    distToCampus: 'сургууль хүртэл', distUnknown: 'Зай тодорхойгүй', distEstimated: ' (шулуун шугамаар тооцоолсон)',
+    rentLabel: 'Түрээс', depositLabel: 'Барьцаа', maintenanceLabel: 'Үйлчилгээний хураамж', inquireText: 'Лавлана уу',
+    addressApprox: ' · Тодорхой хаяг нууц (хорооллын төв цэгээр)',
+    amenityApproxNote: '· Ойролцоох байгууламжийн зай нь хорооллын төв цэгээс тооцоолсон ойролцоо утга',
+    viewGobang: 'Өрөө харах →', viewKakao: '📍 Замын харагдац', favTitle: 'Хадгалах',
+    amenityEmpty: (label) => `Ойролцоо ${label.toLowerCase()} байхгүй`,
+    amenity: { '🏪': 'Дэлгүүр', '☕': 'Кафе', '🛒': 'Супермаркет', '🏥': 'Эмнэлэг', '🧺': 'Угаалгын газар', '📮': 'Шуудан' },
+    typeMap: {
+      '고시원': 'Гошивон', '원룸텔': 'Студи (вонрумтел)', '쉐어하우스': 'Шэйр хаус',
+      '원룸(분리형)': 'Студи (тусдаа)', '원룸(오픈형)': 'Студи (нээлттэй)', '투룸': 'Хоёр өрөө',
+      '원룸텔(고시원)': 'Студи/Гошивон', '게스트하우스': 'Гэст хаус', '모텔': 'Мотель',
+      '빌라/다가구': 'Вилла/олон гэрийн орон сууц', '아파트': 'Орон сууц',
+    },
+    emptyText: 'Таны шүүлтүүрт тохирох байр алга. Хайлтаа өөрчилж үзнэ үү.',
+    resetBtn: 'Шүүлтүүр цэвэрлэх',
+    filterToggleShow: '🔍 Шүүлтүүр',
+    filterToggleHide: '✕ Шүүлтүүр хаах',
+    footnoteSummary: '✅ Байр үзэхэд шалгах зүйлс',
+    collectedBadge: '📅 2026 оны 8-р сарын байдлаар цуглуулсан мэдээлэл',
+    shareBtn: 'Шүүлтүүрийн холбоос хуваалцах', shareCopied: 'Холбоос хуулагдлаа!',
+    compareBtn: 'Хадгалснуудыг харьцуулах', compareTitle: 'Хадгалснуудыг харьцуулах',
+    compareNeedMore: 'Харьцуулах хүснэгт нээхийн тулд 2-оос дээш байр хадгална уу',
+    recentLabel: 'Саяхан үзсэн',
+    rowName: 'Нэр', rowType: 'Төрөл', rowRegion: 'Дүүрэг', rowDist: 'Сургууль хүртэл', rowRent: 'Түрээс',
+    rowDeposit: 'Барьцаа', rowBath: 'Угаалгын өрөө', rowAc: 'Кондиционер', rowSubway: 'Метро',
+    check1: '<b>💧 Усны даралт</b> — Угаалгын өрөө, гал тогооны крант, шүршүүрийг өөрөө нээж үзнэ үү',
+    check2: '<b>🔇 Дуу тусгаарлалт</b> — Хажуу өрөө, коридороос чимээ сонсогдож байгаа эсэх, хананы дуу шалгах',
+    check3: '<b>🦠 Мөөгөнцөр, шавьж</b> — Ханын цаасны толбо, чийглэг үнэр, цонхны хүрээ, угаалгын өрөөний булан шалгах',
+    check4: '<b>☀️ Гэрэлтүүлэг, агааржуулалт</b> — Цонхны чиг, өдрийн цагаар гэрэлтэй эсэх, цонх бодитоор нээгддэг эсэх',
+    check5: '<b>🔥 Халаалт, дулаалга</b> — Зуухны ажиллагааг шалгах, цонхны хүрээгээр салхи орж байгаа эсэх',
+    check6: '<b>🔒 Аюулгүй байдал</b> — Гаалийн хаалганы цоож, барилгын орох систем (карт/код)',
+    check7: '<b>📶 Интернет</b> — LAN порт байгаа эсэх, тусдаа интернетийн гэрээ хэрэгтэй эсэх',
+    check8: '<b>🧾 Үйлчилгээний хураамжид юу орсон</b> — Ус, цахилгаан, интернет орсон эсэхийг нарийвчлан тодруулах',
+    check9: '<b>🅿️ Зогсоол</b> — Хэрэгтэй бол байгаа эсэх, нэмэлт төлбөрийг шалгах',
+    check10: '<b>🚪 Гэмтэл согог байгаа эсэх</b> — Өмнөх түрээслэгч яагаад явсныг, засварын түүхийг асуух',
+    noticeTitle: 'Дөнгөж нүүсэн үү? Эхлээд үүнийг шалгаарай',
+    noticeSub: '<b>Оршин суугаа газрын мэдэгдэл</b> хийх шаардлагатай байж болно — хугацаа алдвал торгууль ногдож болзошгүй',
+    noticeDeadlineLabel: '⏰ Хугацаа',
+    noticeDeadlineValue: 'Нүүсэн өдрөөс хойш <b>15 хоногийн дотор</b>',
+    noticeFineLabel: '⚠️ Мэдэгдээгүй бол',
+    noticeFineValue: 'Хамгийн ихдээ <b>1,000,000 вон</b> торгууль',
+    noticeHowHeading: 'Мэдэгдэх арга (нэгийг сонгоно уу)',
+    noticeHowOnline: '<b>Онлайн</b> — Gov24 эсвэл HiKorea вэбсайтаар',
+    noticeHowVisit: '<b>Биечлэн</b> — Шинэ хаягийн дүүргийн засаг захиргааны төв (dong office) эсвэл шилжилт хөдөлгөөний албанд',
+    noticeDocsHeading: 'Бэлтгэх бичиг баримт',
+    noticeDocs1: 'Гадаадын иргэний бүртгэлийн карт, паспорт',
+    noticeDocs2: 'Оршин суух газрын нотолгоо (түрээсийн гэрээ, дотуур байрны төлбөрийн баримт, орон байрны нотолгоо зэргийн аль нэг)',
+    noticeLink: 'Gov24 дээр дэлгэрэнгүй үзэх →',
+    noticeConfirm: 'Ойлголоо',
+  },
+};
+
+let LANG = (localStorage.getItem('kookmin_housing_lang')) || 'ko';
+function t(key) { return I18N[LANG][key]; }
+
+function applyStaticTranslations() {
+  document.documentElement.lang = LANG;
+  const titles = { ko: '국민대학교 근처 자취방 리스트', en: 'Housing Near Kookmin University', vi: 'Nhà trọ gần Đại học Kookmin', zh: '国民大学附近的住宿列表', ru: 'Жильё рядом с Университетом Кукмин', my: 'Kookmin တက္ကသိုလ်အနီးရှိ အိမ်ငှားစာရင်း', mn: 'Күүкмин Их Сургуулийн ойролцоох байрны жагсаалт' };
+  document.title = titles[LANG] || titles.en;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (el.tagName === 'OPTION' || el.tagName === 'BUTTON' || el.tagName === 'SPAN' || el.tagName === 'DIV' || el.tagName === 'P' || el.tagName === 'LI' || el.tagName === 'A' || el.tagName === 'H2') {
+      el.textContent = t(key);
+    }
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    el.innerHTML = t(el.dataset.i18nHtml);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === LANG));
+}
+
+
+const els = {
+  q: document.getElementById('q'),
+  typeFilter: document.getElementById('typeFilter'),
+  maxRent: document.getElementById('maxRent'),
+  sort: document.getElementById('sort'),
+  grid: document.getElementById('grid'),
+  empty: document.getElementById('empty'),
+  stats: document.getElementById('stats'),
+  resetBtn: document.getElementById('resetBtn'),
+  regionTabs: document.getElementById('regionTabs'),
+  priceChips: document.getElementById('priceChips'),
+  favChip: document.getElementById('favChip'),
+  bathChip: document.getElementById('bathChip'),
+  acChip: document.getElementById('acChip'),
+};
+
+let activeRegions = new Set();
+let activePriceBand = null;   // {min, max} or null
+let favOnly = false;
+let bathOnly = false;
+let acOnly = false;
+
+const FAV_KEY = 'kookmin_housing_favorites';
+function loadFavorites() {
+  try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); }
+  catch (e) { return new Set(); }
+}
+function saveFavorites(set) {
+  try { localStorage.setItem(FAV_KEY, JSON.stringify([...set])); } catch (e) {}
+}
+let favorites = loadFavorites();
+
+// ---------------- URL 필터 상태 공유 ----------------
+let pendingTypeFilter = null;
+function parseUrlState() {
+  const p = new URLSearchParams(location.search);
+  if (p.has('lang') && I18N[p.get('lang')]) LANG = p.get('lang');
+  if (p.has('q')) els.q.value = p.get('q');
+  if (p.has('type')) pendingTypeFilter = p.get('type');
+  if (p.has('rent')) els.maxRent.value = p.get('rent');
+  if (p.has('sort')) els.sort.value = p.get('sort');
+  if (p.has('regions')) {
+    const list = p.get('regions').split(',').filter(Boolean);
+    if (list.length) activeRegions = new Set(list.filter(r => REGION_ORDER.includes(r)));
+  }
+  if (p.has('price')) {
+    const idx = Number(p.get('price'));
+    if (PRICE_BANDS[idx]) activePriceBand = PRICE_BANDS[idx];
+  }
+  favOnly = p.get('fav') === '1';
+  bathOnly = p.get('bath') === '1';
+  acOnly = p.get('ac') === '1';
+}
+
+function buildShareUrl() {
+  const p = new URLSearchParams();
+  if (LANG !== 'ko') p.set('lang', LANG);
+  if (els.q.value.trim()) p.set('q', els.q.value.trim());
+  if (els.typeFilter.value !== 'all') p.set('type', els.typeFilter.value);
+  if (els.maxRent.value) p.set('rent', els.maxRent.value);
+  if (els.sort.value !== 'distance') p.set('sort', els.sort.value);
+  if (activeRegions.size && activeRegions.size !== REGION_ORDER.length) p.set('regions', [...activeRegions].join(','));
+  if (activePriceBand) p.set('price', String(PRICE_BANDS.indexOf(activePriceBand)));
+  if (favOnly) p.set('fav', '1');
+  if (bathOnly) p.set('bath', '1');
+  if (acOnly) p.set('ac', '1');
+  const qs = p.toString();
+  return location.origin + location.pathname + (qs ? '?' + qs : '');
+}
+
+// ---------------- 최근 본 매물 ----------------
+const RECENT_KEY = 'kookmin_housing_recent';
+function loadRecent() {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch (e) { return []; }
+}
+function pushRecent(name) {
+  let list = loadRecent().filter(n => n !== name);
+  list.unshift(name);
+  list = list.slice(0, 5);
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch (e) {}
+  renderRecentStrip();
+}
+function renderRecentStrip() {
+  const list = loadRecent().filter(name => DATA.some(d => d.name === name));
+  const strip = document.getElementById('recentStrip');
+  if (!list.length) { strip.style.display = 'none'; strip.innerHTML = ''; return; }
+  strip.style.display = 'flex';
+  strip.innerHTML = `<span class="rlabel">${escapeHtml(t('recentLabel'))}</span>` +
+    list.map(name => `<div class="rchip" data-name="${escapeHtml(name)}">${escapeHtml(name)}</div>`).join('');
+}
+
+const PRICE_BANDS = [
+  { key: 'priceBand0', min: 0, max: 30 },
+  { key: 'priceBand1', min: 30, max: 50 },
+  { key: 'priceBand2', min: 50, max: 70 },
+  { key: 'priceBand3', min: 70, max: Infinity },
+];
+
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function setupTypeOptions() {
+  const types = [...new Set(DATA.map(d => d.type).filter(Boolean))].sort();
+  els.typeFilter.innerHTML = `<option value="all">${t('typeFilterAll')}</option>` +
+    types.map(ty => `<option value="${escapeHtml(ty)}">${escapeHtml(translateType(ty))}</option>`).join('');
+}
+
+function translateType(ty) {
+  if (!ty) return ty;
+  const map = t('typeMap');
+  // "쉐어하우스(빌라/다가구)" 같은 복합 표기 처리
+  const parenMatch = ty.match(/^(.+?)\((.+)\)$/);
+  if (parenMatch) {
+    const base = map[parenMatch[1]] || parenMatch[1];
+    const inner = parenMatch[2].split('/').map(p => map[p] || p).join('/');
+    return LANG === 'ko' ? `${base}(${inner})` : `${base} (${inner})`;
+  }
+  // "원룸텔/고시원" 같은 슬래시 조합 처리
+  if (ty.includes('/')) {
+    return ty.split('/').map(p => map[p] || p).join('/');
+  }
+  return map[ty] || ty;
+}
+
+function setupRegionTabs() {
+  const counts = {};
+  REGION_ORDER.forEach(r => counts[r] = 0);
+  DATA.forEach(d => { counts[d.region] = (counts[d.region] || 0) + 1; });
+
+  els.regionTabs.innerHTML = REGION_ORDER.map(r => `
+    <div class="region-tab${activeRegions.has(r) ? ' active' : ''}" data-rg="${escapeHtml(r)}">
+      <span class="dot"></span>${escapeHtml(r)} <span class="count">${counts[r]}</span>
+    </div>`).join('');
+
+  els.regionTabs.querySelectorAll('.region-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const r = tab.dataset.rg;
+      if (activeRegions.has(r)) {
+        if (activeRegions.size === 1) return;
+        activeRegions.delete(r);
+        tab.classList.remove('active');
+      } else {
+        activeRegions.add(r);
+        tab.classList.add('active');
+      }
+      applyFilters();
+    });
+  });
+}
+
+function setupPriceChips() {
+  els.priceChips.innerHTML = PRICE_BANDS.map((b, i) =>
+    `<div class="qchip" data-idx="${i}">${escapeHtml(t(b.key))}</div>`).join('');
+  els.priceChips.querySelectorAll('.qchip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const idx = Number(chip.dataset.idx);
+      const isActive = chip.classList.contains('active');
+      els.priceChips.querySelectorAll('.qchip').forEach(c => c.classList.remove('active'));
+      if (isActive) {
+        activePriceBand = null;
+      } else {
+        activePriceBand = PRICE_BANDS[idx];
+        chip.classList.add('active');
+      }
+      applyFilters();
+    });
+  });
+  if (activePriceBand) {
+    const idx = PRICE_BANDS.indexOf(activePriceBand);
+    if (idx >= 0) els.priceChips.children[idx].classList.add('active');
+  }
+}
+
+function depositNum(d) {
+  const m = String(d.deposit ?? '').match(/\d+(\.\d+)?/);
+  return m ? parseFloat(m[0]) : null;
+}
+
+function isPrivate(text) {
+  return typeof text === 'string' && text.trim().startsWith('O');
+}
+
+function applyFilters() {
+  const q = els.q.value.trim().toLowerCase();
+  const type = els.typeFilter.value;
+  const maxRent = parseFloat(els.maxRent.value);
+
+  let list = DATA.filter(d => {
+    if (!activeRegions.has(d.region)) return false;
+    if (q && !((d.name || '').toLowerCase().includes(q) || (d.address || '').toLowerCase().includes(q))) return false;
+    if (type !== 'all' && d.type !== type) return false;
+    if (!isNaN(maxRent) && d.rentMin != null && d.rentMin > maxRent) return false;
+    if (activePriceBand) {
+      const r = d.rentMin;
+      if (r == null || r < activePriceBand.min || r >= activePriceBand.max) return false;
+    }
+    if (favOnly && !favorites.has(d.name)) return false;
+    if (bathOnly && !isPrivate(d.privateBathroom)) return false;
+    if (acOnly && !isPrivate(d.ac)) return false;
+    return true;
+  });
+
+  const sort = els.sort.value;
+  const byNum = (key) => (a, b) => (a[key] ?? Infinity) - (b[key] ?? Infinity);
+  if (sort === 'distance') list.sort(byNum('distanceKm'));
+  else if (sort === 'rentMin') list.sort(byNum('rentMin'));
+  else if (sort === 'deposit') list.sort((a, b) => (depositNum(a) ?? Infinity) - (depositNum(b) ?? Infinity));
+
+  render(list);
+}
+
+function formatWon(manwon) {
+  return Math.round(manwon * 10000).toLocaleString('en-US');
+}
+
+function cardHtml(d) {
+  const dist = (d.distanceKm ?? null) !== null ? `${d.distanceKm}km` : t('distUnknown');
+  const regionClass = d.region === '성북구' ? 'rg-seongbuk' : 'rg-gangbuk';
+  let rentText;
+  if (d.rentMin != null && d.rentMax != null) {
+    if (LANG !== 'ko') {
+      rentText = d.rentMin === d.rentMax ? `₩${formatWon(d.rentMin)}` : `₩${formatWon(d.rentMin)}–₩${formatWon(d.rentMax)}`;
+    } else {
+      rentText = d.rentMin === d.rentMax ? `${d.rentMin}만원` : `${d.rentMin}~${d.rentMax}만원`;
+    }
+  } else {
+    rentText = d.rentRaw || t('inquireText');
+  }
+
+  const subwayLine = d.subwayName
+    ? `🚇 <b>${escapeHtml(d.subwayName)}</b>${d.subwayDistanceM != null ? ` (${d.subwayDistanceM}m)` : ''}`
+    : '';
+  const AMENITY_ORDER = ['🏪', '☕', '🛒', '🏥', '🧺', '📮'];
+  const amenityLabels = t('amenity');
+  const foundIcons = {};
+  (d.amenities || []).forEach(a => {
+    const icon = AMENITY_ORDER.find(ic => a.startsWith(ic));
+    if (icon) foundIcons[icon] = a;
+  });
+  const amenityGrid = AMENITY_ORDER.map(icon => {
+    if (foundIcons[icon]) return `<div class="am" title="${escapeHtml(foundIcons[icon])}">${escapeHtml(foundIcons[icon])}</div>`;
+    return `<div class="am am-empty">${icon} ${escapeHtml(t('amenityEmpty')(amenityLabels[icon]))}</div>`;
+  }).join('');
+  const phoneBtn = d.phone
+    ? `<a class="action-btn secondary" href="tel:${escapeHtml(d.phone)}">📞 ${escapeHtml(d.phone)}</a>`
+    : '';
+  const isFav = favorites.has(d.name);
+
+  return `
+    <div class="card">
+      <button class="fav-btn${isFav ? ' active' : ''}" data-fav="${escapeHtml(d.name)}" aria-label="${t('favTitle')}" title="${t('favTitle')}">${isFav ? '♥' : '♡'}</button>
+      <div class="card-top">
+        <div class="tags">
+          <span class="tag ${regionClass}">${escapeHtml(d.region)}</span>
+          <span class="tag">${escapeHtml(translateType(d.type))}</span>
+        </div>
+        <div class="distpill">
+          <div class="n mono">${dist}</div>
+          <div class="l">${t('distToCampus')}${d.distanceEstimated ? t('distEstimated') : ''}</div>
+        </div>
+      </div>
+      <p class="building">${escapeHtml(d.name)}</p>
+      <p class="address">${escapeHtml(d.address)}${!d.addressPrecise ? ` <span class="approx">${escapeHtml(t('addressApprox'))}</span>` : ''}</p>
+      <div class="price-row">
+        <div class="item"><div class="l">${t('rentLabel')}</div><div class="n mono">${escapeHtml(rentText)}</div></div>
+        <div class="item"><div class="l">${t('depositLabel')}</div><div class="n mono">${escapeHtml(d.deposit)}</div></div>
+      </div>
+      <div class="meta">
+        <span>🚽 <b>${escapeHtml(d.privateBathroom)}</b></span>
+        <span>❄️ <b>${escapeHtml(d.ac)}</b></span>
+        <span>🧾 ${t('maintenanceLabel')} <b>${escapeHtml(d.maintenance)}</b></span>
+      </div>
+      ${subwayLine ? `<p class="subway-line">${subwayLine}</p>` : ''}
+      <div class="amenity-grid">${amenityGrid}</div>
+      ${!d.addressPrecise ? `<p style="color:var(--gold); font-size:11px; margin:-4px 0 10px;">${escapeHtml(t('amenityApproxNote'))}</p>` : ''}
+      ${d.notes ? `<p class="notes">${escapeHtml(d.notes)}</p>` : ''}
+      <div class="actions">
+        <a class="action-btn" data-track-name="${escapeHtml(d.name)}" href="${escapeHtml(d.gobangUrl)}" target="_blank" rel="noopener">${escapeHtml(t('viewGobang'))}</a>
+        <a class="action-btn secondary" href="${escapeHtml(d.kakaoUrl)}" target="_blank" rel="noopener">${escapeHtml(t('viewKakao'))}</a>
+      </div>
+      ${phoneBtn ? `<div class="actions">${phoneBtn}</div>` : ''}
+    </div>
+  `;
+}
+
+function render(list) {
+  els.empty.style.display = list.length ? 'none' : 'block';
+  els.grid.style.display = list.length ? 'grid' : 'none';
+  els.grid.innerHTML = list.map(cardHtml).join('');
+  renderStats(list);
+}
+
+function renderStats(list) {
+  if (!list.length) { els.stats.innerHTML = ''; return; }
+  const withRent = list.filter(d => d.rentMin != null);
+  const avgRent = withRent.length ? Math.round(withRent.reduce((s, d) => s + d.rentMin, 0) / withRent.length) : null;
+  const minRent = withRent.length ? Math.min(...withRent.map(d => d.rentMin)) : null;
+  const wonFmt = (m) => m == null ? '-' : (LANG === 'ko' ? `${m}만원` : `₩${formatWon(m)}`);
+  const eon = t('unitEon') ? t('unitEon') : '';
+
+  els.stats.innerHTML = `
+    <div class="stat"><span class="label">${t('statCount')}</span><span class="value teal mono">${list.length}${eon} <span style="font-size:11px;color:var(--muted)">/ ${t('statOf')} ${DATA.length}${eon}</span></span></div>
+    <div class="stat"><span class="label">${t('statMinRent')}</span><span class="value gold mono">${wonFmt(minRent)}</span></div>
+    <div class="stat"><span class="label">${t('statAvgRent')}</span><span class="value mono">${wonFmt(avgRent)}</span></div>
+    <div class="stat"><span class="label">${t('statFav')}</span><span class="value mono" style="color:#ff6b81">${favorites.size}${eon}</span></div>
+  `;
+}
+
+els.resetBtn.addEventListener('click', () => {
+  els.q.value = ''; els.typeFilter.value = 'all'; els.maxRent.value = ''; els.sort.value = 'distance';
+  activeRegions = new Set(REGION_ORDER);
+  activePriceBand = null; favOnly = false; bathOnly = false; acOnly = false;
+  els.priceChips.querySelectorAll('.qchip').forEach(c => c.classList.remove('active'));
+  els.favChip.classList.remove('active');
+  els.bathChip.classList.remove('active');
+  els.acChip.classList.remove('active');
+  els.regionTabs.querySelectorAll('.region-tab').forEach(t => t.classList.add('active'));
+  applyFilters();
+});
+
+[els.q, els.typeFilter, els.maxRent, els.sort].forEach(el => el.addEventListener('input', applyFilters));
+
+els.favChip.addEventListener('click', () => {
+  favOnly = !favOnly;
+  els.favChip.classList.toggle('active', favOnly);
+  applyFilters();
+});
+els.bathChip.addEventListener('click', () => {
+  bathOnly = !bathOnly;
+  els.bathChip.classList.toggle('active', bathOnly);
+  applyFilters();
+});
+els.acChip.addEventListener('click', () => {
+  acOnly = !acOnly;
+  els.acChip.classList.toggle('active', acOnly);
+  applyFilters();
+});
+
+els.grid.addEventListener('click', (e) => {
+  const btn = e.target.closest('.fav-btn');
+  if (!btn) return;
+  const name = btn.dataset.fav;
+  if (favorites.has(name)) favorites.delete(name); else favorites.add(name);
+  saveFavorites(favorites);
+  updateCompareBtnVisibility();
+  applyFilters();
+});
+
+// 체류지 변경신고 안내 팝업
+(function () {
+  const overlay = document.getElementById('noticeOverlay');
+  const closeBtn = document.getElementById('noticeClose');
+  const confirmBtn = document.getElementById('noticeConfirm');
+
+  function closeNotice() {
+    overlay.classList.add('hidden');
+  }
+
+  closeBtn.addEventListener('click', closeNotice);
+  confirmBtn.addEventListener('click', closeNotice);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeNotice(); });
+})();
+
+async function loadDataAndInit() {
+  els.grid.innerHTML = `<div class="loading-msg">불러오는 중… / Loading…</div>`;
+  try {
+    const res = await fetch('./data.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    DATA = await res.json();
+  } catch (err) {
+    els.grid.innerHTML = `<div class="loading-msg error">
+      데이터를 불러오지 못했어요. 이 파일은 서버(GitHub Pages 등)에서 열어야 정상 작동합니다.<br>
+      Could not load data. This page must be opened via a web server (e.g. GitHub Pages), not by double-clicking the file.
+    </div>`;
+    console.error(err);
+    return;
+  }
+  REGION_ORDER = [...new Set(DATA.map(d => d.region))];
+  activeRegions = new Set(REGION_ORDER);
+
+  parseUrlState();
+  setupTypeOptions();
+  if (pendingTypeFilter) els.typeFilter.value = pendingTypeFilter;
+  setupRegionTabs();
+  setupPriceChips();
+  els.favChip.classList.toggle('active', favOnly);
+  els.bathChip.classList.toggle('active', bathOnly);
+  els.acChip.classList.toggle('active', acOnly);
+  applyStaticTranslations();
+  applyFilters();
+  renderRecentStrip();
+  updateCompareBtnVisibility();
+}
+loadDataAndInit();
+
+document.getElementById('langSwitch').addEventListener('click', (e) => {
+  const btn = e.target.closest('.lang-btn');
+  if (!btn || btn.dataset.lang === LANG) return;
+  LANG = btn.dataset.lang;
+  try { localStorage.setItem('kookmin_housing_lang', LANG); } catch (err) {}
+  applyStaticTranslations();
+  setupTypeOptions();
+  setupPriceChips();
+  applyFilters();
+  renderRecentStrip();
+  const panel = document.getElementById('filterPanel');
+  const toggle = document.getElementById('filterToggle');
+  toggle.querySelector('[data-i18n]').textContent = panel.classList.contains('open') ? t('filterToggleHide') : t('filterToggleShow');
+});
+
+// 모바일 필터 접기/펼치기
+(function () {
+  const toggle = document.getElementById('filterToggle');
+  const panel = document.getElementById('filterPanel');
+  toggle.addEventListener('click', () => {
+    const isOpen = panel.classList.toggle('open');
+    toggle.classList.toggle('open', isOpen);
+    toggle.querySelector('[data-i18n]').textContent = isOpen ? t('filterToggleHide') : t('filterToggleShow');
+  });
+})();
+
+// 하단 안내문 접기/펼치기
+(function () {
+  const box = document.querySelector('.footnote-box');
+  const toggle = document.getElementById('footnoteToggle');
+  toggle.addEventListener('click', () => {
+    box.classList.toggle('open');
+  });
+})();
+
+// ---------------- 필터 링크 공유 ----------------
+document.getElementById('shareBtn').addEventListener('click', async () => {
+  const url = buildShareUrl();
+  const btn = document.getElementById('shareBtn');
+  const label = btn.querySelector('[data-i18n]') || btn.querySelector('span:last-child');
+  try {
+    await navigator.clipboard.writeText(url);
+  } catch (e) {
+    window.prompt('Copy this link:', url);
+    return;
+  }
+  const original = label.textContent;
+  label.textContent = t('shareCopied');
+  setTimeout(() => { label.textContent = t('shareBtn'); }, 1800);
+});
+
+// ---------------- 최근 본 매물 클릭 ----------------
+document.getElementById('recentStrip').addEventListener('click', (e) => {
+  const chip = e.target.closest('.rchip');
+  if (!chip) return;
+  els.q.value = chip.dataset.name;
+  applyFilters();
+  document.getElementById('grid').scrollIntoView({ behavior: 'smooth' });
+});
+
+document.getElementById('grid').addEventListener('click', (e) => {
+  const link = e.target.closest('a[data-track-name]');
+  if (!link) return;
+  pushRecent(link.dataset.trackName);
+});
+
+// ---------------- 찜한 곳 비교 ----------------
+function updateCompareBtnVisibility() {
+  document.getElementById('compareBtn').style.display = favorites.size >= 2 ? 'inline-flex' : 'none';
+}
+
+function buildCompareTable() {
+  const items = DATA.filter(d => favorites.has(d.name));
+  const rows = [
+    ['rowName', d => d.name],
+    ['rowType', d => translateType(d.type)],
+    ['rowRegion', d => d.region],
+    ['rowDist', d => d.distanceKm != null ? `${d.distanceKm}km` : '-'],
+    ['rowRent', d => d.rentMin != null ? (d.rentMin === d.rentMax ? `${d.rentMin}` : `${d.rentMin}~${d.rentMax}`) + (LANG==='ko'?'만원':'') : (d.rentRaw || '-')],
+    ['rowDeposit', d => d.depositText || d.deposit || '-'],
+    ['rowBath', d => d.privateBathroom || '-'],
+    ['rowAc', d => d.ac || '-'],
+    ['rowSubway', d => d.subwayName ? `${d.subwayName}${d.subwayDistanceM != null ? ' ('+d.subwayDistanceM+'m)' : ''}` : '-'],
+  ];
+  const table = document.getElementById('compareTable');
+  let html = '<tr><th></th>' + items.map(d => `<th>${escapeHtml(d.name)}</th>`).join('') + '</tr>';
+  rows.forEach(([key, fn]) => {
+    html += `<tr><td>${escapeHtml(t(key))}</td>` + items.map(d => `<td class="${key === 'rowName' ? 'name-cell' : ''}">${escapeHtml(String(fn(d)))}</td>`).join('') + '</tr>';
+  });
+  table.innerHTML = html;
+}
+
+document.getElementById('compareBtn').addEventListener('click', () => {
+  buildCompareTable();
+  document.getElementById('compareOverlay').classList.remove('hidden');
+});
+document.getElementById('compareClose').addEventListener('click', () => {
+  document.getElementById('compareOverlay').classList.add('hidden');
+});
+document.getElementById('compareOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'compareOverlay') e.currentTarget.classList.add('hidden');
+});
+
+</script>
+</body>
+</html>
